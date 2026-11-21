@@ -5,59 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Đấu Trường Bộ Lạc - PLAYZONE</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: Arial, sans-serif; }
   body { background: #0f172a; color: #fff; overflow: hidden; height: 100vh; }
   #select-screen {
     position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 15px;
   }
-  h1 { font-size: 2.2rem; color: #facc15; text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); margin-bottom: 6px; text-transform: uppercase; text-align: center; }
+  h1 { font-size: 2.1rem; color: #facc15; margin-bottom: 6px; text-transform: uppercase; text-align: center; text-shadow: 0 0 15px rgba(250,204,21,0.5); }
   .subtitle { color: #94a3b8; margin-bottom: 18px; font-size: 0.95rem; text-align: center; }
   .char-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    max-width: 780px; width: 100%; margin-bottom: 20px;
+    max-width: 760px; width: 100%; margin-bottom: 20px;
   }
   .char-card {
     background: #1e293b; border: 2px solid #334155; border-radius: 14px; padding: 10px;
-    text-align: center; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+    text-align: center; cursor: pointer; transition: 0.15s;
   }
-  .char-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
-  .char-card.selected { border-color: #facc15; background: #1e3a8a; box-shadow: 0 0 18px rgba(250, 204, 21, 0.45); }
-  .char-card canvas { width: 88px; height: 88px; display: block; margin: 0 auto 6px; }
-  .char-name { font-weight: bold; font-size: 1rem; color: #fff; }
-  .char-role { font-size: 0.8rem; color: #38bdf8; margin-top: 2px; }
-  .btn-row { display: flex; gap: 14px; }
+  .char-card.selected { border-color: #facc15; background: #1e3a8a; transform: translateY(-3px); box-shadow: 0 0 18px rgba(250,204,21,0.4); }
+  .char-card canvas { width: 84px; height: 92px; border-radius: 50%; background: #0f172a; display: block; margin: 0 auto 6px; border: 2px solid #475569; }
+  .char-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
+  .char-role { font-size: 0.78rem; color: #38bdf8; margin-top: 2px; }
+  .btn-row { display: flex; gap: 12px; }
   .btn-main {
     padding: 13px 36px; font-size: 1.05rem; font-weight: bold; border: none; border-radius: 30px;
     background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; cursor: pointer;
-    box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
   }
   .btn-back {
     padding: 13px 24px; font-size: 1rem; font-weight: bold; border: 1px solid #475569; border-radius: 30px;
     background: #1e293b; color: #cbd5e1; text-decoration: none; display: inline-flex; align-items: center;
   }
-  .btn-main:hover, .btn-back:hover { transform: scale(1.05); }
-
   #hud { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 5; }
-  .top-bar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
-  .box { background: rgba(15, 23, 42, 0.86); border: 1px solid #334155; padding: 10px 15px; border-radius: 12px; }
-  .bar-bg { width: 200px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+  .top-bar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; }
+  .box { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 10px 14px; border-radius: 12px; }
+  .bar-bg { width: 185px; height: 11px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 5px; }
   .hp-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.1s; }
   .xp-fill { height: 100%; background: #facc15; width: 0%; transition: width 0.15s; }
-  .buff-bar { display: flex; gap: 8px; margin-top: 8px; font-size: 0.8rem; font-weight: bold; }
-  .buff-tag { background: #1e3a8a; border: 1px solid #38bdf8; padding: 3px 8px; border-radius: 6px; color: #bae6fd; }
-
+  .buff-tags { display: flex; gap: 6px; margin-top: 6px; font-size: 0.75rem; font-weight: bold; }
+  .buff-tag { background: #1e3a8a; color: #38bdf8; padding: 2px 7px; border-radius: 6px; border: 1px solid #38bdf8; }
   .controls-hint {
     position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.86); padding: 8px 18px; border-radius: 20px;
-    border: 1px solid #334155; font-size: 0.84rem; color: #cbd5e1; white-space: nowrap;
+    background: rgba(15, 23, 42, 0.85); padding: 7px 16px; border-radius: 20px;
+    border: 1px solid #334155; font-size: 0.82rem; color: #cbd5e1; white-space: nowrap;
   }
-  .key { background: #334155; color: #facc15; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
   #game-over {
     position: fixed; inset: 0; background: rgba(9, 13, 22, 0.9);
     display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
   }
-  canvas#arena { display: block; background: #7cb342; }
+  canvas#arena { display: block; background: #4d7c0f; }
   @media(max-width:650px){ .char-grid { grid-template-columns: repeat(2, 1fr); max-height: 52vh; overflow-y: auto; } }
 </style>
 </head>
@@ -65,290 +59,161 @@
 
 <div id="select-screen">
   <h1>Đấu Trường Bộ Lạc</h1>
-  <p class="subtitle">Chọn chiến binh 4 hướng • Ăn nấm cute tăng cấp • Nhặt Nam Châm & Giày Tốc Độ</p>
+  <p class="subtitle">4 Hướng Di Chuyển • Nhặt Nam Châm & Giày • Sống Sót Cuối Cùng</p>
   <div class="char-grid" id="char-grid"></div>
   <div class="btn-row">
     <a href="index.html" class="btn-back">⬅ Trang chủ</a>
-    <button class="btn-main" id="start-btn">VÀO TRẬN CHIẾN</button>
+    <button id="start-btn" class="btn-main">VÀO TRẬN CHIẾN</button>
   </div>
 </div>
 
 <div id="hud">
   <div class="top-bar">
     <div class="box">
-      <div id="player-title" style="font-weight:bold; color:#facc15;">Cấp 1 • Thiết Cốt</div>
+      <div id="player-title" style="font-weight:bold; color:#facc15;">Cấp 1</div>
       <div class="bar-bg"><div class="hp-fill" id="hp-bar"></div></div>
-      <div id="hp-text" style="font-size:0.75rem; color:#86efac; margin-top:2px;">560 / 560 HP</div>
-      <div class="bar-bg" style="height:7px;"><div class="xp-fill" id="xp-bar"></div></div>
-      <div id="alive-count" style="font-size:0.8rem; color:#94a3b8; margin-top:6px;">Còn sống: 16/16</div>
-      <div class="buff-bar" id="buff-bar"></div>
+      <div class="bar-bg" style="height:6px;"><div class="xp-fill" id="xp-bar"></div></div>
+      <div id="alive-count" style="font-size:0.8rem; color:#94a3b8; margin-top:5px;">Còn sống: 16/16</div>
+      <div class="buff-tags" id="buff-tags"></div>
     </div>
-    <div class="box" style="min-width:185px;">
-      <div style="font-weight:bold; color:#facc15; font-size:0.9rem; margin-bottom:5px; border-bottom:1px solid #334155; padding-bottom:4px;">🏆 BẢNG XẾP HẠNG</div>
-      <div id="lb-list" style="font-size:0.84rem;"></div>
+    <div class="box" style="min-width:170px;">
+      <div style="font-weight:bold; color:#facc15; font-size:0.88rem; margin-bottom:4px;">🏆 BẢNG XẾP HẠNG</div>
+      <div id="lb-list" style="font-size:0.82rem;"></div>
     </div>
   </div>
-  <div class="controls-hint">
-    <span class="key">WASD / Mũi tên</span> Di chuyển 4 hướng &nbsp;|&nbsp;
-    <span class="key">Chuột Trái / J</span> Đánh thường &nbsp;|&nbsp;
-    <span class="key">Chuột Phải / E</span> Kỹ năng &nbsp;|&nbsp;
-    <span class="key">Space</span> Lướt né
-  </div>
+  <div class="controls-hint">WASD / Mũi tên: Di chuyển 4 hướng | Chuột Trái: Đánh | Chuột Phải / E: Kỹ năng | Space: Lướt</div>
 </div>
 
 <div id="game-over">
   <h1 id="end-title">KẾT THÚC TRẬN ĐẤU</h1>
-  <p id="end-stats" class="subtitle" style="font-size:1.15rem; margin:12px 0 20px;"></p>
+  <p id="end-stats" class="subtitle" style="margin:12px 0 20px;"></p>
   <div class="btn-row">
     <a href="index.html" class="btn-back">⬅ Trang chủ</a>
-    <button class="btn-main" id="restart-btn">CHƠI LẠI</button>
+    <button id="restart-btn" class="btn-main">CHƠI LẠI</button>
   </div>
 </div>
 
 <canvas id="arena"></canvas>
 
 <script>
+// Tăng gấp 3 lần máu cơ bản để giao tranh đã tay hơn
 const CHARACTERS = [
-  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', hp: 580, spd: 3.2, dmg: 48, range: 85, type: 'melee', hair: '#ea580c', outfit: '#9a3412', weapon: 'hammer', accent: '#fb923c' },
-  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', hp: 650, spd: 3.0, dmg: 44, range: 90, type: 'melee', hair: '#e2e8f0', outfit: '#475569', weapon: 'shield', accent: '#38bdf8' },
-  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', hp: 460, spd: 3.6, dmg: 42, range: 360, type: 'ranged', hair: '#facc15', outfit: '#854d0e', weapon: 'bow', accent: '#fde047' },
-  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', hp: 450, spd: 3.7, dmg: 45, range: 380, type: 'ranged', hair: '#38bdf8', outfit: '#075985', weapon: 'crossbow', accent: '#7dd3fc' },
-  { id: 4, name: 'U Linh', role: 'Pháp Sư', hp: 440, spd: 3.4, dmg: 52, range: 320, type: 'magic', hair: '#2dd4bf', outfit: '#115e59', weapon: 'staff', accent: '#5eead4' },
-  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', hp: 440, spd: 3.5, dmg: 54, range: 330, type: 'magic', hair: '#c084fc', outfit: '#581c87', weapon: 'orb', accent: '#e879f9' },
-  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', hp: 510, spd: 3.9, dmg: 50, range: 95, type: 'melee', hair: '#4ade80', outfit: '#166534', weapon: 'sword', accent: '#86efac' },
-  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', hp: 500, spd: 4.0, dmg: 52, range: 95, type: 'melee', hair: '#f43f5e', outfit: '#881337', weapon: 'dual', accent: '#fda4af' }
+  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', row: 0, col: 0, hp: 480, spd: 3.2, dmg: 26, range: 75, type: 'melee', color: '#f97316' },
+  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', row: 0, col: 1, hp: 560, spd: 3.0, dmg: 22, range: 80, type: 'melee', color: '#94a3b8' },
+  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', row: 0, col: 2, hp: 350, spd: 3.6, dmg: 21, range: 340, type: 'ranged', color: '#eab308' },
+  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', row: 0, col: 3, hp: 340, spd: 3.7, dmg: 23, range: 360, type: 'ranged', color: '#38bdf8' },
+  { id: 4, name: 'U Linh', role: 'Pháp Sư', row: 1, col: 0, hp: 320, spd: 3.4, dmg: 28, range: 300, type: 'magic', color: '#2dd4bf' },
+  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', row: 1, col: 1, hp: 320, spd: 3.5, dmg: 29, range: 310, type: 'magic', color: '#c084fc' },
+  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', row: 1, col: 2, hp: 390, spd: 3.9, dmg: 27, range: 85, type: 'melee', color: '#4ade80' },
+  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', row: 1, col: 3, hp: 380, spd: 4.0, dmg: 28, range: 85, type: 'melee', color: '#f43f5e' }
 ];
 
 let selectedCharId = 0;
+const charSprites = new Array(8);
 
-// Hàm vẽ nhân vật Chibi 4 hướng (dir: 'down', 'up', 'left', 'right')
-function drawChibiCharacter(ctx, c, dir, animTick, state, isPreview) {
-  ctx.save();
-
-  let bobY = 0;
-  let tilt = 0;
-  let scaleX = 1;
-  let scaleY = 1;
-
-  if (state === 'Idle') {
-    scaleY = 1 + Math.sin(animTick * 0.6) * 0.04;
-  } else if (state === 'Walk') {
-    bobY = -Math.abs(Math.sin(animTick * 1.6)) * 6;
-    tilt = Math.sin(animTick * 1.6) * 0.1;
-  } else if (state === 'Attack') {
-    tilt = (dir === 'left' ? -0.25 : 0.25);
-    scaleX = 1.12;
-  } else if (state === 'Skill') {
-    scaleX = 1.22;
-    scaleY = 1.22;
-  } else if (state === 'Hit') {
-    bobY = -4;
-    tilt = -0.18;
-  } else if (state === 'Dash') {
-    scaleX = 1.28;
-    scaleY = 0.82;
-  } else if (state === 'Death') {
-    tilt = Math.PI / 2;
-    bobY = 14;
+function buildDefaultSprites() {
+  for (let i = 0; i < CHARACTERS.length; i++) {
+    const c = CHARACTERS[i];
+    const off = document.createElement('canvas');
+    off.width = 120; off.height = 120;
+    const octx = off.getContext('2d');
+    octx.fillStyle = c.color;
+    octx.beginPath(); octx.arc(60, 60, 44, 0, Math.PI * 2); octx.fill();
+    octx.lineWidth = 4; octx.strokeStyle = '#fff'; octx.stroke();
+    octx.fillStyle = '#fff'; octx.font = 'bold 14px Arial'; octx.textAlign = 'center';
+    octx.fillText(c.name, 60, 65);
+    charSprites[i] = off;
   }
-
-  ctx.translate(0, bobY);
-  ctx.rotate(tilt);
-  ctx.scale(scaleX, scaleY);
-
-  // Chân Chibi bước chạy
-  const legSwing = state === 'Walk' ? Math.sin(animTick * 1.6) * 5 : 0;
-  ctx.fillStyle = '#334155';
-  ctx.beginPath();
-  ctx.arc(-8, 16 + legSwing, 5, 0, Math.PI * 2);
-  ctx.arc(8, 16 - legSwing, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Thân áo bộ lạc
-  ctx.fillStyle = c.outfit;
-  ctx.beginPath();
-  ctx.roundRect(-14, -2, 28, 20, 8);
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#1e293b';
-  ctx.stroke();
-
-  // Đai lưng thổ cẩm
-  ctx.fillStyle = c.accent;
-  ctx.fillRect(-13, 8, 26, 4);
-
-  // Đầu Chibi tròn to
-  ctx.fillStyle = '#fed7aa';
-  ctx.beginPath();
-  ctx.arc(0, -14, 17, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#1e293b';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Vẽ theo 4 hướng: Up, Down, Left, Right
-  if (dir === 'up') {
-    // Nhìn từ phía sau: Tóc phủ kín sau gáy + băng đô bộ lạc
-    ctx.fillStyle = c.hair;
-    ctx.beginPath();
-    ctx.arc(0, -15, 18.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = c.accent;
-    ctx.fillRect(-17, -18, 34, 5);
-  } else {
-    // Tóc mái phía trên
-    ctx.fillStyle = c.hair;
-    ctx.beginPath();
-    ctx.arc(0, -18, 18, Math.PI, 0);
-    ctx.fill();
-    ctx.stroke();
-
-    // Băng đô
-    ctx.fillStyle = c.accent;
-    ctx.fillRect(-16, -21, 32, 4);
-
-    // Mắt biểu cảm theo hướng nhìn
-    const eyeOffsetX = dir === 'left' ? -6 : (dir === 'right' ? 6 : 0);
-    ctx.fillStyle = '#0f172a';
-    if (dir === 'down') {
-      ctx.beginPath();
-      ctx.arc(-6, -12, 2.8, 0, Math.PI * 2);
-      ctx.arc(6, -12, 2.8, 0, Math.PI * 2);
-      ctx.fill();
-      // Má hồng cute
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
-      ctx.beginPath();
-      ctx.arc(-10, -8, 3, 0, Math.PI * 2);
-      ctx.arc(10, -8, 3, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.arc(eyeOffsetX - 3, -12, 2.8, 0, Math.PI * 2);
-ctx.arc(eyeOffsetX + 4, -12, 2.8, 0, Math.PI * 2);
-ctx.fill();
 }
-}
-// Vẽ vũ khí đặc trưng trên tay
-ctx.save();
-const handX = dir === 'left' ? -18 : (dir === 'right' ? 18 : 16);
-const atkSwing = state === 'Attack' ? 0.9 : (state === 'Skill' ? 1.4 : 0);
-ctx.translate(handX, 4);
-ctx.rotate((dir === 'left' ? -1 : 1) * atkSwing);
-if (c.weapon === 'hammer' || c.weapon === 'shield') {
-ctx.fillStyle = '#94a3b8';
-ctx.fillRect(-3, -18, 6, 22);
-ctx.fillStyle = c.accent;
-ctx.fillRect(-9, -24, 18, 10);
-} else if (c.weapon === 'sword' || c.weapon === 'dual') {
-ctx.fillStyle = c.accent;
-ctx.beginPath();
-ctx.moveTo(0, -26);
-ctx.lineTo(5, -4);
-ctx.lineTo(-5, -4);
-ctx.closePath();
-ctx.fill();
-} else if (c.weapon === 'bow' || c.weapon === 'crossbow') {
-ctx.strokeStyle = c.accent;
-ctx.lineWidth = 3;
-ctx.beginPath();
-ctx.arc(0, -6, 12, -Math.PI / 2, Math.PI / 2);
-ctx.stroke();
-} else {
-// Trượng / Cầu phép
-ctx.fillStyle = '#78350f';
-ctx.fillRect(-2, -20, 4, 24);
-ctx.fillStyle = c.accent;
-ctx.beginPath();
-ctx.arc(0, -22, 6, 0, Math.PI * 2);
-ctx.fill();
-}
-ctx.restore();
-if (state === 'Hit') {
-ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
-ctx.beginPath();
-ctx.arc(0, -6, 22, 0, Math.PI * 2);
-ctx.fill();
-}
-ctx.restore();
-}
+
 function renderSelectGrid() {
-const grid = document.getElementById('char-grid');
-grid.innerHTML = '';
-for (let i = 0; i < CHARACTERS.length; i++) {
-const c = CHARACTERS[i];
-const card = document.createElement('div');
-card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
-const cv = document.createElement('canvas');
-cv.width = 88;
-cv.height = 88;
-const pctx = cv.getContext('2d');
-pctx.translate(44, 54);
-drawChibiCharacter(pctx, c, 'down', 0, 'Idle', true);
-card.appendChild(cv);
-const label = document.createElement('div');
-label.innerHTML = '' + c.name + '' + c.role + ' • ' + c.hp + ' HP';
-card.appendChild(label);
-card.onclick = function() {
-selectedCharId = c.id;
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < CHARACTERS.length; i++) {
+    const c = CHARACTERS[i];
+    const card = document.createElement('div');
+    card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
+    const cv = document.createElement('canvas');
+    cv.width = 84; cv.height = 92;
+    if (charSprites[c.id]) cv.getContext('2d').drawImage(charSprites[c.id], 0, 0, 84, 92);
+    card.appendChild(cv);
+    const label = document.createElement('div');
+    label.innerHTML = '<div class="char-name">' + c.name + '</div><div class="char-role">' + c.role + ' • ❤️' + c.hp + '</div>';
+    card.appendChild(label);
+    card.onclick = function() { selectedCharId = c.id; renderSelectGrid(); };
+    grid.appendChild(card);
+  }
+}
+
+buildDefaultSprites();
 renderSelectGrid();
+
+// Cắt nhân vật từ ảnh gốc và loại bỏ viền khung thẻ bài bằng bo tròn + tách nền xanh
+const gridImg = new Image();
+gridImg.src = 'characters-grid.png';
+gridImg.onload = function() {
+  const w = gridImg.width, h = gridImg.height;
+  const colX = new Array(w * 0.158, w * 0.348, w * 0.538, w * 0.728);
+  const rowY = new Array(h * 0.255, h * 0.605);
+  const cropW = w * 0.115, cropH = h * 0.195;
+
+  for (let i = 0; i < CHARACTERS.length; i++) {
+    const c = CHARACTERS[i];
+    const off = document.createElement('canvas');
+    off.width = 128; off.height = 128;
+    const octx = off.getContext('2d');
+
+    // Bo tròn khung hình để loại bỏ hoàn toàn viền vuông thẻ bài
+    octx.save();
+    octx.beginPath();
+    octx.arc(64, 64, 56, 0, Math.PI * 2);
+    octx.clip();
+    octx.drawImage(gridImg, colX[c.col], rowY[c.row], cropW, cropH, 4, 4, 120, 120);
+    octx.restore();
+
+    // Thêm viền hào quang tròn theo màu hệ phái
+    octx.lineWidth = 5;
+    octx.strokeStyle = c.color;
+    octx.beginPath();
+    octx.arc(64, 64, 56, 0, Math.PI * 2);
+    octx.stroke();
+
+    charSprites[i] = off;
+  }
+  renderSelectGrid();
 };
-grid.appendChild(card);
-}
-}
-renderSelectGrid();
+
 const canvas = document.getElementById('arena');
 const ctx = canvas.getContext('2d');
-function resize() {
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-}
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
+
 const MAP_SIZE = 2400;
-let entities = [];
-let mushrooms = [];
-let items = [];
-let projectiles = [];
-let slashEffects = [];
-let obstacles = [];
-let particles = [];
-let floatingTexts = [];
-let player = null;
-let keys = {};
-let mouse = { x: 0, y: 0 };
-let gameRunning = false;
-let lastTime = 0;
+let entities = [], mushrooms = [], items = [], projectiles = [], slashes = [], obstacles = [], particles = [];
+let player = null, keys = {}, mouse = { x: 0, y: 0 }, gameRunning = false, lastTime = 0;
+
 window.addEventListener('keydown', function(e) {
-keys[e.code] = true;
-if (gameRunning && player && player.state !== 'Death') {
-if (e.code === 'Space') triggerDash(player);
-if (e.code === 'KeyE' || e.code === 'KeyK') triggerSkill(player);
-if (e.code === 'KeyJ') triggerAttack(player);
-}
+  keys[e.code] = true;
+  if (gameRunning && player && player.state !== 'Death') {
+    if (e.code === 'Space') triggerDash(player);
+    if (e.code === 'KeyE') triggerSkill(player);
+  }
 });
 window.addEventListener('keyup', function(e) { keys[e.code] = false; });
 window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
 window.addEventListener('mousedown', function(e) {
-if (!gameRunning || !player || player.state === 'Death') return;
-if (e.button === 0) triggerAttack(player);
-if (e.button === 2) triggerSkill(player);
+  if (!gameRunning || !player || player.state === 'Death') return;
+  if (e.button === 0) triggerAttack(player);
+  if (e.button === 2) triggerSkill(player);
 });
 window.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 function initArena() {
-entities = [];
-mushrooms = [];
-items = [];
-projectiles = [];
-slashEffects = [];
-obstacles = [];
-particles = [];
-floatingTexts = [];
+entities = []; mushrooms = []; items = []; projectiles = []; slashes = []; obstacles = []; particles = [];
 for (let i = 0; i < 26; i++) {
 obstacles.push({
-x: 160 + Math.random() * (MAP_SIZE - 320),
-y: 160 + Math.random() * (MAP_SIZE - 320),
+x: 150 + Math.random() * (MAP_SIZE - 300),
+y: 150 + Math.random() * (MAP_SIZE - 300),
 r: 34 + Math.random() * 18,
 type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
 });
@@ -357,12 +222,12 @@ player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, t
 entities.push(player);
 for (let i = 1; i < 16; i++) {
 const t = CHARACTERS[i % CHARACTERS.length];
-const bot = createFighter(t, 160 + Math.random() * (MAP_SIZE - 320), 160 + Math.random() * (MAP_SIZE - 320), false);
+const bot = createFighter(t, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
 bot.name = t.name + ' #' + i;
 entities.push(bot);
 }
-for (let i = 0; i < 95; i++) spawnMushroom();
-for (let i = 0; i < 18; i++) spawnItem();
+for (let i = 0; i < 100; i++) spawnMushroom();
+for (let i = 0; i < 24; i++) spawnItem();
 document.getElementById('select-screen').style.display = 'none';
 document.getElementById('game-over').style.display = 'none';
 document.getElementById('hud').style.display = 'block';
@@ -372,36 +237,488 @@ requestAnimationFrame(gameLoop);
 }
 function createFighter(template, x, y, isPlayer) {
 return {
-id: template.id,
-name: template.name,
-role: template.role,
-type: template.type,
-hair: template.hair,
-outfit: template.outfit,
-weapon: template.weapon,
-accent: template.accent,
-isPlayer: isPlayer,
-x: x,
-y: y,
-maxHp: template.hp,
-hp: template.hp,
-spd: template.spd,
-dmg: template.dmg,
-range: template.range,
-level: 1,
-xp: 0,
-nextXp: 60,
-kills: 0,
-dir: 'down',
-angle: 0,
-state: 'Idle',
-stateTimer: 0,
-animTick: Math.random() * 100,
-atkCd: 0,
-skillCd: 0,
-dashCd: 0,
-magnetTimer: 0,
-speedTimer: 0,
+id: template.id, name: template.name, role: template.role,
+type: template.type, color: template.color,
+isPlayer: isPlayer, x: x, y: y,
+maxHp: template.hp, hp: template.hp, spd: template.spd, dmg: template.dmg, range: template.range,
+level: 1, xp: 0, nextXp: 50, kills: 0,
+dir: 'down', // 4 hướng: 'up', 'down', 'left', 'right'
+facing: 1, angle: 0,
+state: 'Idle', stateTimer: 0, animTick: Math.random() * 100,
+atkCd: 0, skillCd: 0, dashCd: 0,
+magnetTimer: 0, speedTimer: 0,
 deathAlpha: 1
 };
 }
+function spawnMushroom() {
+const isRare = Math.random() < 0.22;
+mushrooms.push({
+x: 80 + Math.random() * (MAP_SIZE - 160),
+y: 80 + Math.random() * (MAP_SIZE - 160),
+xp: isRare ? 35 : 15,
+capColor: isRare ? '#facc15' : '#fb7185',
+spotColor: isRare ? '#fef08a' : '#fff1f2',
+r: isRare ? 14 : 10,
+bob: Math.random() * 6
+});
+}
+function spawnItem() {
+const rand = Math.random();
+let kind = 'heal';
+if (rand < 0.35) kind = 'magnet';
+else if (rand < 0.7) kind = 'boots';
+items.push({
+x: 100 + Math.random() * (MAP_SIZE - 200),
+y: 100 + Math.random() * (MAP_SIZE - 200),
+kind: kind,
+bob: Math.random() * 6
+});
+}
+function setState(f, newState, duration) {
+if (f.state !== 'Death') {
+f.state = newState;
+f.stateTimer = duration || 0.25;
+}
+}
+function triggerAttack(f) {
+if (f.atkCd > 0 || f.state === 'Death') return;
+f.atkCd = 0.42;
+setState(f, 'Attack', 0.22);
+if (f.type === 'melee') {
+// Hiệu ứng vệt chém vòng cung chuẩn Ngôi Sao Bộ Lạc
+slashes.push({
+x: f.x, y: f.y, angle: f.angle,
+radius: f.range + f.level * 5,
+color: f.color, life: 0.22, maxLife: 0.22, isSkill: false
+});
+for (let i = 0; i < entities.length; i++) {
+const t = entities[i];
+if (t !== f && t.state !== 'Death') {
+const dist = Math.hypot(t.x - f.x, t.y - f.y);
+if (dist <= f.range + f.level * 5) {
+dealDamage(f, t, f.dmg + f.level * 4);
+}
+}
+}
+} else {
+// Bắn đạn có đuôi sáng rực
+projectiles.push({
+owner: f, x: f.x, y: f.y,
+vx: Math.cos(f.angle) * 10.5, vy: Math.sin(f.angle) * 10.5,
+dmg: f.dmg + f.level * 4, color: f.color, life: 45, r: 9
+});
+}
+}
+function triggerSkill(f) {
+if (f.skillCd > 0 || f.state === 'Death') return;
+f.skillCd = 3.2;
+setState(f, 'Skill', 0.35);
+if (f.type === 'melee') {
+// Xoáy kiếm / Húc bùng nổ vòng tròn lớn
+f.x += Math.cos(f.angle) * 80;
+f.y += Math.sin(f.angle) * 80;
+slashes.push({
+x: f.x, y: f.y, angle: f.angle,
+radius: 125 + f.level * 4,
+color: '#facc15', life: 0.35, maxLife: 0.35, isSkill: true
+});
+addParticle(f.x, f.y, f.color, 95, 0.35);
+for (let i = 0; i < entities.length; i++) {
+const t = entities[i];
+if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 125 + f.level * 4) {
+dealDamage(f, t, (f.dmg + f.level * 5) * 1.7);
+}
+}
+} else {
+// Bắn 5 tia năng lượng tỏa hình quạt kèm vòng sáng tụ lực
+addParticle(f.x, f.y, '#38bdf8', 55, 0.25);
+for (let i = -2; i <= 2; i++) {
+const a = f.angle + i * 0.16;
+projectiles.push({
+owner: f, x: f.x, y: f.y,
+vx: Math.cos(a) * 11, vy: Math.sin(a) * 11,
+dmg: (f.dmg + f.level * 4) * 0.9, color: '#facc15', life: 48, r: 11
+});
+}
+}
+}
+function triggerDash(f) {
+if (f.dashCd > 0 || f.state === 'Death') return;
+f.dashCd = 1.8;
+setState(f, 'Dash', 0.2);
+f.x += Math.cos(f.angle) * 120;
+f.y += Math.sin(f.angle) * 120;
+addParticle(f.x, f.y, '#38bdf8', 40, 0.25);
+}
+function dealDamage(attacker, target, amount) {
+if (target.state === 'Dash' || target.state === 'Death') return;
+target.hp -= amount;
+setState(target, 'Hit', 0.18);
+addParticle(target.x, target.y - 18, '#ef4444', 22, 0.22);
+if (target.hp <= 0) {
+target.hp = 0;
+target.state = 'Death';
+attacker.kills++;
+gainXp(attacker, 55 + target.level * 18);
+attacker.hp = Math.min(attacker.maxHp, attacker.hp + attacker.maxHp * 0.25);
+}
+}
+function gainXp(f, amount) {
+f.xp += amount;
+while (f.xp >= f.nextXp) {
+f.xp -= f.nextXp;
+f.level++;
+f.nextXp = Math.round(f.nextXp * 1.35);
+f.maxHp += 65;
+f.hp = f.maxHp;
+addParticle(f.x, f.y, '#facc15', 55, 0.4);
+}
+}
+function addParticle(x, y, color, radius, life) {
+particles.push({ x: x, y: y, color: color, radius: radius, life: life, maxLife: life });
+}
+function update(dt) {
+for (let idx = 0; idx < entities.length; idx++) {
+const f = entities[idx];
+f.animTick += dt * 8;
+if (f.atkCd > 0) f.atkCd -= dt;
+if (f.skillCd > 0) f.skillCd -= dt;
+if (f.dashCd > 0) f.dashCd -= dt;
+if (f.magnetTimer > 0) f.magnetTimer -= dt;
+if (f.speedTimer > 0) f.speedTimer -= dt;
+if (f.state === 'Death') {
+f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8);
+continue;
+}
+if (f.stateTimer > 0) {
+f.stateTimer -= dt;
+if (f.stateTimer <= 0) f.state = 'Idle';
+}
+let moveX = 0, moveY = 0;
+if (f.isPlayer) {
+if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
+} else {
+let nearestEnemy = null, minEDist = 380;
+for (let j = 0; j < entities.length; j++) {
+const other = entities[j];
+if (other !== f && other.state !== 'Death') {
+const d = Math.hypot(other.x - f.x, other.y - f.y);
+if (d < minEDist) { minEDist = d; nearestEnemy = other; }
+}
+}
+if (nearestEnemy) {
+f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
+if (minEDist > f.range * 0.85) { moveX = Math.cos(f.angle); moveY = Math.sin(f.angle); }
+else {
+triggerAttack(f);
+if (Math.random() < 0.025) triggerSkill(f);
+if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
+}
+} else {
+let nearestMush = null, minMDist = 9999;
+for (let m = 0; m < mushrooms.length; m++) {
+const d = Math.hypot(mushrooms[m].x - f.x, mushrooms[m].y - f.y);
+if (d < minMDist) { minMDist = d; nearestMush = mushrooms[m]; }
+}
+if (nearestMush) {
+f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
+moveX = Math.cos(f.angle); moveY = Math.sin(f.angle);
+}
+}
+}
+// Cập nhật 4 hướng nhân vật (Trên, Dưới, Trái, Phải)
+if (moveX !== 0 || moveY !== 0) {
+if (Math.abs(moveX) > Math.abs(moveY)) {
+f.dir = moveX < 0 ? 'left' : 'right';
+f.facing = moveX < 0 ? -1 : 1;
+} else {
+f.dir = moveY < 0 ? 'up' : 'down';
+}
+const len = Math.hypot(moveX, moveY);
+const curSpd = f.spd * (f.speedTimer > 0 ? 1.55 : 1);
+f.x += (moveX / len) * curSpd;
+f.y += (moveY / len) * curSpd;
+if (f.speedTimer > 0 && Math.random() < 0.4) {
+addParticle(f.x, f.y + 15, '#38bdf8', 10, 0.18);
+}
+if (f.state === 'Idle') f.state = 'Walk';
+} else if (f.state === 'Walk') {
+f.state = 'Idle';
+}
+f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
+f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
+for (let o = 0; o < obstacles.length; o++) {
+const obs = obstacles[o];
+const dx = f.x - obs.x, dy = f.y - obs.y, dist = Math.hypot(dx, dy);
+if (dist < obs.r + 22 && dist > 0) {
+f.x = obs.x + (dx / dist) * (obs.r + 22);
+f.y = obs.y + (dy / dist) * (obs.r + 22);
+}
+}
+// Hút & Ăn nấm (nếu có Nam Châm thì bán kính hút tăng lên 240px)
+const pickupRange = f.magnetTimer > 0 ? 240 : 38;
+for (let i = mushrooms.length - 1; i >= 0; i--) {
+const m = mushrooms[i];
+const d = Math.hypot(f.x - m.x, f.y - m.y);
+if (d < pickupRange) {
+if (d > 34 && f.magnetTimer > 0) {
+m.x += ((f.x - m.x) / d) * 9;
+m.y += ((f.y - m.y) / d) * 9;
+} else {
+gainXp(f, m.xp);
+mushrooms.splice(i, 1);
+spawnMushroom();
+}
+}
+}
+// Nhặt vật phẩm (Nam châm, Giày chạy nhanh, Hồi máu)
+for (let i = items.length - 1; i >= 0; i--) {
+const it = items[i];
+if (Math.hypot(f.x - it.x, f.y - it.y) < 42) {
+if (it.kind === 'magnet') {
+f.magnetTimer = 8.0;
+addParticle(f.x, f.y, '#c084fc', 42, 0.3);
+} else if (it.kind === 'boots') {
+f.speedTimer = 7.0;
+addParticle(f.x, f.y, '#38bdf8', 42, 0.3);
+} else if (it.kind === 'heal') {
+f.hp = Math.min(f.maxHp, f.hp + f.maxHp * 0.35);
+addParticle(f.x, f.y, '#22c55e', 42, 0.3);
+}
+items.splice(i, 1);
+spawnItem();
+}
+}
+}
+for (let i = projectiles.length - 1; i >= 0; i--) {
+const p = projectiles[i];
+p.x += p.vx; p.y += p.vy; p.life--;
+let hit = false;
+for (let j = 0; j < entities.length; j++) {
+const t = entities[j];
+if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 30) {
+dealDamage(p.owner, t, p.dmg);
+hit = true;
+}
+}
+if (hit || p.life <= 0) projectiles.splice(i, 1);
+}
+for (let i = slashes.length - 1; i >= 0; i--) {
+slashes[i].life -= dt;
+if (slashes[i].life <= 0) slashes.splice(i, 1);
+}
+for (let i = particles.length - 1; i >= 0; i--) {
+particles[i].life -= dt;
+if (particles[i].life <= 0) particles.splice(i, 1);
+}
+updateHUD();
+}
+function updateHUD() {
+const alive = entities.filter(function(e) { return e.state !== 'Death'; });
+document.getElementById('player-title').innerText =
+'Cấp ' + player.level + ' • ' + player.name + ' (' + Math.ceil(player.hp) + '/' + player.maxHp + ' HP)';
+document.getElementById('hp-bar').style.width = ((player.hp / player.maxHp) * 100) + '%';
+document.getElementById('xp-bar').style.width = ((player.xp / player.nextXp) * 100) + '%';
+document.getElementById('alive-count').innerText = 'Còn sống: ' + alive.length + '/16 • Hạ gục: ' + player.kills;
+let buffHtml = '';
+if (player.magnetTimer > 0) buffHtml += '🧲 Nam châm: ' + player.magnetTimer.toFixed(1) + 's';
+if (player.speedTimer > 0) buffHtml += '👟 Tăng tốc: ' + player.speedTimer.toFixed(1) + 's';
+document.getElementById('buff-tags').innerHTML = buffHtml;
+const top5 = alive.slice().sort(function(a, b) { return b.level - a.level || b.kills - a.kills; }).slice(0, 5);
+let lbHtml = '';
+for (let i = 0; i < top5.length; i++) {
+const e = top5[i];
+lbHtml += '' + (i + 1) + '. ' + e.name + 'Lv.' + e.level + '';
+}
+document.getElementById('lb-list').innerHTML = lbHtml;
+if (player.state === 'Death' || alive.length === 1) {
+gameRunning = false;
+document.getElementById('game-over').style.display = 'flex';
+document.getElementById('end-title').innerText = player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
+document.getElementById('end-stats').innerText = 'Đạt Cấp ' + player.level + ' • Hạ gục ' + player.kills + ' đối thủ';
+}
+}
+function draw() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+const camX = player.x - canvas.width / 2;
+const camY = player.y - canvas.height / 2;
+ctx.save();
+ctx.translate(-camX, -camY);
+// Nền cỏ đấu trường tươi sáng
+ctx.fillStyle = '#4d7c0f';
+ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+ctx.lineWidth = 2;
+for (let x = 0; x <= MAP_SIZE; x += 100) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke(); }
+for (let y = 0; y <= MAP_SIZE; y += 100) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke(); }
+ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 10; ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+// Vẽ Nấm Cute (mũ tròn, chấm bi trắng, má hồng)
+const nowSec = performance.now() / 400;
+for (let i = 0; i < mushrooms.length; i++) {
+const m = mushrooms[i];
+const bounce = Math.sin(nowSec + m.bob) * 2;
+ctx.fillStyle = 'rgba(0,0,0,0.28)';
+ctx.beginPath(); ctx.ellipse(m.x, m.y + 8, m.r, m.r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+// Thân nấm mũm mĩm
+ctx.fillStyle = '#fef3c7';
+ctx.beginPath();
+ctx.roundRect(m.x - m.r * 0.45, m.y - 2 + bounce, m.r * 0.9, 10, 4);
+ctx.fill();
+// Mũ nấm tròn cute
+ctx.fillStyle = m.capColor;
+ctx.beginPath();
+ctx.arc(m.x, m.y - 2 + bounce, m.r, Math.PI, 0);
+ctx.ellipse(m.x, m.y - 2 + bounce, m.r, m.r * 0.35, 0, 0, Math.PI);
+ctx.fill();
+ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+// Chấm bi trên mũ nấm
+ctx.fillStyle = m.spotColor;
+ctx.beginPath(); ctx.arc(m.x - m.r * 0.4, m.y - m.r * 0.45 + bounce, m.r * 0.22, 0, Math.PI * 2); ctx.fill();
+ctx.beginPath(); ctx.arc(m.x + m.r * 0.4, m.y - m.r * 0.45 + bounce, m.r * 0.22, 0, Math.PI * 2); ctx.fill();
+ctx.beginPath(); ctx.arc(m.x, m.y - m.r * 0.7 + bounce, m.r * 0.25, 0, Math.PI * 2); ctx.fill();
+}
+// Vẽ Item (Nam châm, Giày chạy nhanh, Hồi máu)
+for (let i = 0; i < items.length; i++) {
+const it = items[i];
+const floatY = Math.sin(nowSec * 1.2 + it.bob) * 4;
+ctx.fillStyle = 'rgba(0,0,0,0.3)';
+ctx.beginPath(); ctx.ellipse(it.x, it.y + 14, 15, 7, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = it.kind === 'magnet' ? '#a855f7' : (it.kind === 'boots' ? '#0284c7' : '#16a34a');
+ctx.beginPath(); ctx.arc(it.x, it.y + floatY, 16, 0, Math.PI * 2); ctx.fill();
+ctx.lineWidth = 2.5; ctx.strokeStyle = '#facc15'; ctx.stroke();
+ctx.font = '16px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+const icon = it.kind === 'magnet' ? '🧲' : (it.kind === 'boots' ? '👟' : '❤️');
+ctx.fillText(icon, it.x, it.y + floatY + 1);
+}
+// Sắp xếp chiều sâu 2.5D
+const renderList = [];
+for (let i = 0; i < obstacles.length; i++) renderList.push({ kind: 'obs', y: obstacles[i].y, data: obstacles[i] });
+for (let i = 0; i < entities.length; i++) renderList.push({ kind: 'fighter', y: entities[i].y, data: entities[i] });
+renderList.sort(function(a, b) { return a.y - b.y; });
+for (let i = 0; i < renderList.length; i++) {
+const item = renderList[i];
+if (item.kind === 'obs') {
+const o = item.data;
+ctx.fillStyle = 'rgba(0,0,0,0.35)';
+ctx.beginPath(); ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
+ctx.beginPath(); ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2); ctx.fill();
+if (o.type === 'fire') {
+ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2); ctx.fill();
+}
+} else {
+drawFighter(item.data);
+}
+}
+// Hiệu ứng vệt chém / kỹ năng hoành tráng
+for (let i = 0; i < slashes.length; i++) {
+const s = slashes[i];
+const alpha = s.life / s.maxLife;
+ctx.save();
+ctx.translate(s.x, s.y);
+ctx.globalAlpha = alpha;
+if (s.isSkill) {
+ctx.strokeStyle = '#facc15';
+ctx.lineWidth = 10;
+ctx.beginPath(); ctx.arc(0, 0, s.radius * (1.1 - alpha * 0.3), 0, Math.PI * 2); ctx.stroke();
+ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
+ctx.fill();
+} else {
+ctx.rotate(s.angle);
+ctx.strokeStyle = '#ffffff';
+ctx.lineWidth = 12;
+ctx.beginPath(); ctx.arc(0, 0, s.radius, -1.1, 1.1); ctx.stroke();
+ctx.strokeStyle = s.color;
+ctx.lineWidth = 6;
+ctx.beginPath(); ctx.arc(0, 0, s.radius - 6, -1.0, 1.0); ctx.stroke();
+}
+ctx.restore();
+}
+// Đạn năng lượng có vệt sáng
+for (let i = 0; i < projectiles.length; i++) {
+const p = projectiles[i];
+ctx.save();
+ctx.fillStyle = p.color;
+ctx.shadowColor = p.color;
+ctx.shadowBlur = 12;
+ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = '#fff';
+ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.45, 0, Math.PI * 2); ctx.fill();
+ctx.restore();
+}
+for (let i = 0; i < particles.length; i++) {
+const pt = particles[i];
+ctx.globalAlpha = pt.life / pt.maxLife; ctx.fillStyle = pt.color;
+ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+}
+ctx.restore();
+}
+function drawFighter(f) {
+if (f.deathAlpha <= 0) return;
+ctx.save();
+ctx.globalAlpha = f.deathAlpha;
+ctx.translate(f.x, f.y);
+// Vòng từ trường nếu đang ăn Nam Châm
+if (f.magnetTimer > 0) {
+ctx.strokeStyle = 'rgba(192, 132, 252, 0.45)';
+ctx.lineWidth = 2;
+ctx.beginPath(); ctx.arc(0, 0, 55 + Math.sin(f.animTick * 2) * 6, 0, Math.PI * 2); ctx.stroke();
+}
+// Bóng dưới chân
+ctx.fillStyle = 'rgba(0,0,0,0.4)';
+ctx.beginPath(); ctx.ellipse(0, 24, 24, 11, 0, 0, Math.PI * 2); ctx.fill();
+// Mũi tên chỉ hướng 4 chiều (Trên, Dưới, Trái, Phải)
+ctx.fillStyle = f.isPlayer ? '#facc15' : '#fff';
+ctx.beginPath();
+if (f.dir === 'up') { ctx.moveTo(0, -48); ctx.lineTo(-7, -39); ctx.lineTo(7, -39); }
+else if (f.dir === 'down') { ctx.moveTo(0, 38); ctx.lineTo(-7, 29); ctx.lineTo(7, 29); }
+else if (f.dir === 'left') { ctx.moveTo(-38, 0); ctx.lineTo(-29, -7); ctx.lineTo(-29, 7); }
+else { ctx.moveTo(38, 0); ctx.lineTo(29, -7); ctx.lineTo(29, 7); }
+ctx.fill();
+// Hiệu ứng chuyển động theo 4 hướng & 7 trạng thái
+let scaleX = f.facing, scaleY = 1, rot = 0, offsetY = 0;
+if (f.dir === 'up') scaleY = 0.94;
+if (f.state === 'Idle') scaleY *= 1 + Math.sin(f.animTick * 0.5) * 0.04;
+else if (f.state === 'Walk') { offsetY = -Math.abs(Math.sin(f.animTick * 1.5)) * 8; rot = Math.sin(f.animTick * 1.5) * 0.09; }
+else if (f.state === 'Attack') { rot = f.facing * 0.28; scaleX = f.facing * 1.16; }
+else if (f.state === 'Skill') { scaleX = f.facing * 1.28; scaleY = 1.28; }
+else if (f.state === 'Hit') { offsetY = -5; rot = -f.facing * 0.2; }
+else if (f.state === 'Dash') { scaleX = f.facing * 1.3; scaleY = 0.8; }
+else if (f.state === 'Death') { rot = f.facing * (Math.PI / 2); offsetY = 14; }
+ctx.save();
+ctx.translate(0, offsetY);
+ctx.rotate(rot);
+ctx.scale(scaleX, scaleY);
+const size = 62 + f.level * 2;
+if (charSprites[f.id]) {
+ctx.drawImage(charSprites[f.id], -size / 2, -size / 2, size, size);
+}
+if (f.state === 'Hit') {
+ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, Math.PI * 2); ctx.fill();
+}
+ctx.restore();
+// Thanh máu & Tên trên đầu
+if (f.state !== 'Death') {
+ctx.fillStyle = '#0f172a'; ctx.fillRect(-28, -56, 56, 7);
+ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
+ctx.fillRect(-27, -55, 54 * (f.hp / f.maxHp), 5);
+ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
+ctx.fillText('Lv.' + f.level + ' ' + f.name, 0, -61);
+}
+ctx.restore();
+}
+function gameLoop(now) {
+if (!gameRunning) return;
+const dt = Math.min(0.05, (now - lastTime) / 1000);
+lastTime = now;
+update(dt);
+draw();
+requestAnimationFrame(gameLoop);
+}
+document.getElementById('start-btn').onclick = initArena;
+document.getElementById('restart-btn').onclick = initArena;
