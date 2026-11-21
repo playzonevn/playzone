@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đấu Trường Bộ Lạc - PLAYZONE</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: #0f172a; color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+  
+  /* Màn hình chọn tướng */
+  #select-screen {
+    position: absolute; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px;
+  }
+  h1 { font-size: 2.5rem; color: #facc15; text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; }
+  .subtitle { color: #94a3b8; margin-bottom: 24px; font-size: 1rem; }
+  .char-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 820px; width: 100%; margin-bottom: 24px;
+  }
+  .char-card {
+    background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 10px;
+    text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .char-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
+  .char-card.selected { border-color: #facc15; background: #1e3a8a; box-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
+  .char-card canvas { width: 100px; height: 115px; border-radius: 8px; background: #0f172a; display: block; margin: 0 auto 8px; }
+  .char-name { font-weight: bold; font-size: 1.05rem; color: #f8fafc; }
+  .char-role { font-size: 0.8rem; color: #38bdf8; margin-top: 2px; }
+
+  #start-btn {
+    padding: 14px 42px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 30px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444); color: white; cursor: pointer;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); transition: transform 0.15s;
+  }
+  #start-btn:hover { transform: scale(1.05); }
+
+  /* HUD trong trận */
+  #hud { position: absolute; inset: 0; pointer-events: none; display: none; }
+  .top-bar { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .stats-box { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 12px 18px; border-radius: 12px; }
+  .bar-bg { width: 200px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+  .hp-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.1s; }
+  .xp-fill { height: 100%; background: #facc15; width: 0%; transition: width 0.2s; }
+  .leaderboard { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 12px 16px; border-radius: 12px; min-width: 190px; }
+  .leaderboard h3 { font-size: 0.9rem; color: #facc15; margin-bottom: 6px; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+  .lb-item { font-size: 0.85rem; display: flex; justify-content: space-between; margin: 3px 0; }
+
+  .controls-hint {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85); padding: 8px 20px; border-radius: 20px;
+    border: 1px solid #334155; font-size: 0.85rem; color: #cbd5e1;
+  }
+  .key { background: #334155; color: #facc15; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+
+  #game-over {
+    position: absolute; inset: 0; background: rgba(9, 13, 22, 0.88);
+    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+  }
+  canvas#arena { display: block; background: #2d4c2b; }
+</style>
+</head>
+<body>
+
+  <!-- Màn hình chọn nhân vật -->
+  <div id="select-screen">
+    <h1>Đấu Trường Bộ Lạc</h1>
+    <p class="subtitle">Ăn nấm tăng cấp • Sinh tồn 16 chiến binh • Làm chủ thung lũng</p>
+    <div class="char-grid" id="char-grid"></div>
+    <button id="start-btn">VÀO TRẬN CHIẾN</button>
+  </div>
+
+  <!-- Giao diện trong trận -->
+  <div id="hud">
+    <div class="top-bar">
+      <div class="stats-box">
+        <div id="player-title" style="font-weight:bold; color:#facc15;">Cấp 1 • Thiết Cốt</div>
+        <div class="bar-bg"><div class="hp-fill" id="hp-bar"></div></div>
+        <div class="bar-bg" style="height:7px;"><div class="xp-fill" id="xp-bar"></div></div>
+        <div id="alive-count" style="font-size:0.8rem; color:#94a3b8; margin-top:6px;">Còn sống: 16/16</div>
+      </div>
+      <div class="leaderboard">
+        <h3>🏆 BẢNG XẾP HẠNG</h3>
+        <div id="lb-list"></div>
+      </div>
+    </div>
+    <div class="controls-hint">
+      <span class="key">WASD</span> Di chuyển &nbsp;|&nbsp;
+      <span class="key">Chuột Trái</span> Đánh thường &nbsp;|&nbsp;
+      <span class="key">Chuột Phải / E</span> Kỹ năng &nbsp;|&nbsp;
+      <span class="key">Space</span> Lướt né (Dash)
+    </div>
+  </div>
+
+  <!-- Màn hình kết thúc -->
+  <div id="game-over">
+    <h1 id="end-title">BẠN ĐÃ BỊ HẠ GỤC</h1>
+    <p id="end-stats" class="subtitle" style="font-size:1.2rem; margin-top:10px;"></p>
+    <button id="restart-btn" style="padding:12px 32px; font-size:1.1rem; border-radius:25px; border:none; background:#38bdf8; color:#0f172a; font-weight:bold; cursor:pointer; margin-top:15px;">CHƠI LẠI</button>
+  </div>
+
+  <canvas id="arena"></canvas>
+
+<script>
+// Dữ liệu 8 nhân vật khớp vị trí trên ảnh characters-grid.png (2 hàng x 4 cột)
+const CHARACTERS = [
+  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', row: 0, col: 0, hp: 160, spd: 3.1, dmg: 22, range: 65, type: 'melee', color: '#f97316' },
+  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', row: 0, col: 1, hp: 185, spd: 2.9, dmg: 19, range: 70, type: 'melee', color: '#94a3b8' },
+  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', row: 0, col: 2, hp: 115, spd: 3.5, dmg: 18, range: 320, type: 'ranged', color: '#eab308' },
+  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', row: 0, col: 3, hp: 110, spd: 3.6, dmg: 20, range: 340, type: 'ranged', color: '#38bdf8' },
+  { id: 4, name: 'U Linh', role: 'Pháp Sư', row: 1, col: 0, hp: 105, spd: 3.3, dmg: 24, range: 280, type: 'magic', color: '#2dd4bf' },
+  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', row: 1, col: 1, hp: 105, spd: 3.4, dmg: 25, range: 290, type: 'magic', color: '#c084fc' },
+  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', row: 1, col: 2, hp: 130, spd: 3.8, dmg: 23, range: 75, type: 'melee', color: '#4ade80' },
+  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', row: 1, col: 3, hp: 125, spd: 3.9, dmg: 24, range: 75, type: 'melee', color: '#f43f5e' }
+];
+
+let selectedCharId = 0;
+const charSprites = [];
+const gridImg = new Image();
+gridImg.src = 'characters-grid.png'; // File ảnh thứ 2 bạn đã tải lên
+
+// Tọa độ cắt 8 thẻ nhân vật từ ảnh gốc 1280x720
+const CROP_COLS =;
+const CROP_ROWS =;
+const CROP_W = 185;
+const CROP_H = 210;
+
+gridImg.onload = () => {
+  CHARACTERS.forEach((c, idx) => {
+    const off = document.createElement('canvas');
+    off.width = CROP_W;
+    off.height = CROP_H;
+    const octx = off.getContext('2d');
+    octx.drawImage(gridImg, CROP_COLS[c.col], CROP_ROWS[c.row], CROP_W, CROP_H, 0, 0, CROP_W, CROP_H);
+    charSprites[idx] = off;
+  });
+  renderSelectGrid();
+};
+
+gridImg.onerror = () => {
+  // Fallback nếu chưa đặt file characters-grid.png cùng thư mục
+  CHARACTERS.forEach((c, idx) => {
+    const off = document.createElement('canvas');
+    off.width = 120; off.height = 140;
+    const octx = off.getContext('2d');
+    octx.fillStyle = c.color;
+    octx.beginPath(); octx.arc(60, 70, 45, 0, Math.PI * 2); octx.fill();
+    octx.fillStyle = '#fff'; octx.font = 'bold 16px sans-serif'; octx.textAlign = 'center';
+    octx.fillText(c.name, 60, 75);
+    charSprites[idx] = off;
+  });
+  renderSelectGrid();
+};
+
+function renderSelectGrid() {
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
+    const cv = document.createElement('canvas');
+    cv.width = 100; cv.height = 115;
+    cv.getContext('2d').drawImage(charSprites[c.id], 0, 0, 100, 115);
+    card.appendChild(cv);
+    card.innerHTML += `<div class="char-name">${c.name}</div><div class="char-role">${c.role}</div>`;
+    card.onclick = () => { selectedCharId = c.id; renderSelectGrid(); };
+    grid.appendChild(card);
+  });
+}
+
+// Thiết lập Canvas Đấu Trường
+const canvas = document.getElementById('arena');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+const MAP_SIZE = 2400;
+let entities = [];
+let mushrooms = [];
+let projectiles = [];
+let obstacles = [];
+let particles = [];
+let player = null;
+let keys = {};
+let mouse = { x: 0, y: 0 };
+let gameRunning = false;
+
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (gameRunning && player && player.state !== 'Death') {
+    if (e.code === 'Space') triggerDash(player);
+    if (e.code === 'KeyE') triggerSkill(player);
+  }
+});
+window.addEventListener('keyup', e => keys[e.code] = false);
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mousedown', e => {
+  if (!gameRunning || !player || player.state === 'Death') return;
+  if (e.button === 0) triggerAttack(player);
+  if (e.button === 2) triggerSkill(player);
+});
+window.addEventListener('contextmenu', e => e.preventDefault());
+
+function initArena() {
+  entities = []; mushrooms = []; projectiles = []; obstacles = []; particles = [];
+  
+  // Tạo vật cản địa hình (Cột Totem, Đá cổ, Lửa trại)
+  for (let i = 0; i < 28; i++) {
+    obstacles.push({
+      x: 150 + Math.random() * (MAP_SIZE - 300),
+      y: 150 + Math.random() * (MAP_SIZE - 300),
+      r: 35 + Math.random() * 20,
+type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
+});
+}
+// Tạo 16 nhân vật (1 người chơi + 15 Bot)
+player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
+entities.push(player);
+for (let i = 1; i < 16; i++) {
+const template = CHARACTERS[i % CHARACTERS.length];
+const bot = createFighter(template, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
+bot.name = ${template.name} #${i};
+entities.push(bot);
+}
+// Tạo 90 cây nấm tăng cấp khắp bản đồ
+for (let i = 0; i < 90; i++) spawnMushroom();
+document.getElementById('select-screen').style.display = 'none';
+document.getElementById('game-over').style.display = 'none';
+document.getElementById('hud').style.display = 'block';
+gameRunning = true;
+requestAnimationFrame(gameLoop);
+}
+function createFighter(template, x, y, isPlayer) {
+return {
+...template,
+isPlayer, x, y, vx: 0, vy: 0,
+maxHp: template.hp, hp: template.hp,
+level: 1, xp: 0, nextXp: 50, kills: 0,
+facing: 1, angle: 0,
+state: 'Idle', // Idle, Walk, Attack, Skill, Hit, Dash, Death
+stateTimer: 0, animTick: Math.random() * 100,
+atkCd: 0, skillCd: 0, dashCd: 0, deathAlpha: 1
+};
+}
+function spawnMushroom() {
+const isRare = Math.random() < 0.2;
+mushrooms.push({
+x: 80 + Math.random() * (MAP_SIZE - 160),
+y: 80 + Math.random() * (MAP_SIZE - 160),
+xp: isRare ? 35 : 15,
+color: isRare ? '#facc15' : '#f43f5e',
+r: isRare ? 13 : 9
+});
+}
+function setState(f, newState, duration = 0.25) {
+if (f.state === 'Death') return;
+f.state = newState;
+f.stateTimer = duration;
+}
+function triggerAttack(f) {
+if (f.atkCd > 0 || f.state === 'Death') return;
+f.atkCd = 0.45;
+setState(f, 'Attack', 0.22);
+if (f.type === 'melee') {
+// Chém diện rộng phía trước
+addParticle(f.x + Math.cos(f.angle) * 40, f.y + Math.sin(f.angle) * 40, f.color, 28, 0.2);
+entities.forEach(target => {
+if (target !== f && target.state !== 'Death') {
+const dist = Math.hypot(target.x - f.x, target.y - f.y);
+if (dist <= f.range + f.level * 4) dealDamage(f, target, f.dmg + f.level * 3);
+}
+});
+} else {
+// Bắn đạn tầm xa
+projectiles.push({
+owner: f, x: f.x, y: f.y,
+vx: Math.cos(f.angle) * 9, vy: Math.sin(f.angle) * 9,
+dmg: f.dmg + f.level * 3, color: f.color, life: 45, r: 8
+});
+}
+}
+function triggerSkill(f) {
+if (f.skillCd > 0 || f.state === 'Death') return;
+f.skillCd = 3.5;
+setState(f, 'Skill', 0.35);
+if (f.type === 'melee') {
+// Xoáy kiếm / Húc lướt gây sát thương xung quanh
+f.x += Math.cos(f.angle) * 75;
+f.y += Math.sin(f.angle) * 75;
+addParticle(f.x, f.y, f.color, 65, 0.35);
+entities.forEach(t => {
+if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 110) {
+dealDamage(f, t, (f.dmg + f.level * 4) * 1.6);
+}
+});
+} else {
+// Bắn 5 tia năng lượng hình quạt
+for (let i = -2; i <= 2; i++) {
+const a = f.angle + i * 0.18;
+projectiles.push({
+owner: f, x: f.x, y: f.y,
+vx: Math.cos(a) * 10, vy: Math.sin(a) * 10,
+dmg: (f.dmg + f.level * 3) * 0.85, color: '#facc15', life: 45, r: 10
+});
+}
+}
+}
+function triggerDash(f) {
+if (f.dashCd > 0 || f.state === 'Death') return;
+f.dashCd = 2.0;
+setState(f, 'Dash', 0.2);
+f.x += Math.cos(f.angle) * 110;
+f.y += Math.sin(f.angle) * 110;
+addParticle(f.x, f.y, '#38bdf8', 35, 0.25);
+}
+function dealDamage(attacker, target, amount) {
+if (target.state === 'Dash' || target.state === 'Death') return; // Né đòn khi đang Dash
+target.hp -= amount;
+setState(target, 'Hit', 0.18);
+addParticle(target.x, target.y - 20, '#ef4444', 18, 0.2);
+if (target.hp <= 0) {
+target.hp = 0;
+target.state = 'Death';
+attacker.kills++;
+gainXp(attacker, 45 + target.level * 15);
+attacker.hp = Math.min(attacker.maxHp, attacker.hp + 30);
+}
+}
+function gainXp(f, amount) {
+f.xp += amount;
+while (f.xp >= f.nextXp) {
+f.xp -= f.nextXp;
+f.level++;
+f.nextXp = Math.round(f.nextXp * 1.35);
+f.maxHp += 25;
+f.hp = f.maxHp;
+addParticle(f.x, f.y, '#facc15', 50, 0.4);
+}
+}
+function addParticle(x, y, color, radius, life) {
+particles.push({ x, y, color, radius, life, maxLife: life });
+}
+function update(dt) {
+// Cập nhật nhân vật
+entities.forEach(f => {
+f.animTick += dt * 8;
+if (f.atkCd > 0) f.atkCd -= dt;
+if (f.skillCd > 0) f.skillCd -= dt;
+if (f.dashCd > 0) f.dashCd -= dt;
+if (f.state === 'Death') {
+f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8);
+return;
+}
+if (f.stateTimer > 0) {
+f.stateTimer -= dt;
+if (f.stateTimer <= 0) f.state = 'Idle';
+}
+let moveX = 0, moveY = 0;
+if (f.isPlayer) {
+if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
+} else {
+// AI Bot thông minh: tìm nấm hoặc săn đối thủ gần nhất
+let nearestEnemy = null, minEDist = 360;
+entities.forEach(other => {
+if (other !== f && other.state !== 'Death') {
+const d = Math.hypot(other.x - f.x, other.y - f.y);
+if (d < minEDist) { minEDist = d; nearestEnemy = other; }
+}
+});
+if (nearestEnemy) {
+f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
+if (minEDist > f.range * 0.85) {
+moveX = Math.cos(f.angle); moveY = Math.sin(f.angle);
+} else {
+triggerAttack(f);
+if (Math.random() < 0.02) triggerSkill(f);
+if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
+}
+} else {
+// Đi ăn nấm
+let nearestMush = mushrooms[0], minMDist = 9999;
+mushrooms.forEach(m => {
+const d = Math.hypot(m.x - f.x, m.y - f.y);
+if (d < minMDist) { minMDist = d; nearestMush = m; }
+});
+if (nearestMush) {
+f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
+moveX = Math.cos(f.angle); moveY = Math.sin(f.angle);
+}
+}
+}
+if (moveX !== 0 || moveY !== 0) {
+const len = Math.hypot(moveX, moveY);
+f.x += (moveX / len) * f.spd;
+f.y += (moveY / len) * f.spd;
+if (moveX < 0) f.facing = -1;
+if (moveX > 0) f.facing = 1;
+if (f.state === 'Idle') f.state = 'Walk';
+} else if (f.state === 'Walk') {
+f.state = 'Idle';
+}
+// Giới hạn bản đồ & va chạm vật cản
+f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
+f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
+obstacles.forEach(obs => {
+const dx = f.x - obs.x, dy = f.y - obs.y;
+const dist = Math.hypot(dx, dy);
+if (dist < obs.r + 22) {
+f.x = obs.x + (dx / dist) * (obs.r + 22);
+f.y = obs.y + (dy / dist) * (obs.r + 22);
+}
+});
+// Ăn nấm tăng cấp
+for (let i = mushrooms.length - 1; i >= 0; i--) {
+const m = mushrooms[i];
+if (Math.hypot(f.x - m.x, f.y - m.y) < 34) {
+gainXp(f, m.xp);
+mushrooms.splice(i, 1);
+spawnMushroom();
+}
+}
+});
+// Cập nhật đạn
+for (let i = projectiles.length - 1; i >= 0; i--) {
+const p = projectiles[i];
+p.x += p.vx; p.y += p.vy; p.life--;
+let hit = false;
+entities.forEach(t => {
+if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 28) {
+dealDamage(p.owner, t, p.dmg);
+hit = true;
+}
+});
+if (hit || p.life <= 0) projectiles.splice(i, 1);
+}
+// Cập nhật hiệu ứng
+for (let i = particles.length - 1; i >= 0; i--) {
+particles[i].life -= dt;
+if (particles[i].life <= 0) particles.splice(i, 1);
+}
+updateHUD();
+}
+function updateHUD() {
+const alive = entities.filter(e => e.state !== 'Death');
+document.getElementById('player-title').innerText = Cấp ${player.level} • ${player.name} (${player.kills} Hạ gục);
+document.getElementById('hp-bar').style.width = ${(player.hp / player.maxHp) * 100}%;
+document.getElementById('xp-bar').style.width = ${(player.xp / player.nextXp) * 100}%;
+document.getElementById('alive-count').innerText = Chiến binh còn sống: ${alive.length}/16;
+const top5 = [...alive].sort((a, b) => b.level - a.level || b.kills - a.kills).slice(0, 5);
+document.getElementById('lb-list').innerHTML = top5.map((e, i) =>
+<div class="lb-item" style="color:${e.isPlayer ? '#facc15' : '#e2e8f0'}"><span>${i + 1}. ${e.name}</span><span>Lv.${e.level}</span></div>
+).join('');
+if (player.state === 'Death' || alive.length === 1) {
+gameRunning = false;
+document.getElementById('game-over').style.display = 'flex';
+document.getElementById('end-title').innerText = player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
+document.getElementById('end-stats').innerText = Đạt Cấp ${player.level} • Hạ gục ${player.kills} đối thủ;
+}
+}
+function draw() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+const camX = player.x - canvas.width / 2;
+const camY = player.y - canvas.height / 2;
+ctx.save();
+ctx.translate(-camX, -camY);
+// Nền cỏ đấu trường góc nhìn nghiêng + lưới tọa độ
+ctx.fillStyle = '#365314';
+ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+ctx.lineWidth = 2;
+for (let x = 0; x <= MAP_SIZE; x += 100) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke(); }
+for (let y = 0; y <= MAP_SIZE; y += 100) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke(); }
+// Viền ranh giới đấu trường
+ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 10;
+ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+// Vẽ nấm
+mushrooms.forEach(m => {
+ctx.fillStyle = 'rgba(0,0,0,0.3)';
+ctx.beginPath(); ctx.ellipse(m.x, m.y + 6, m.r, m.r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = '#fef3c7'; ctx.fillRect(m.x - 3, m.y - 2, 6, 8);
+ctx.fillStyle = m.color;
+ctx.beginPath(); ctx.arc(m.x, m.y - 3, m.r, Math.PI, 0); ctx.fill();
+});
+// Sắp xếp theo trục Y để tạo chiều sâu 2.5D nghiêng
+const renderList = [
+...obstacles.map(o => ({ kind: 'obs', y: o.y, data: o })),
+...entities.map(e => ({ kind: 'fighter', y: e.y, data: e }))
+].sort((a, b) => a.y - b.y);
+renderList.forEach(item => {
+if (item.kind === 'obs') {
+const o = item.data;
+ctx.fillStyle = 'rgba(0,0,0,0.35)';
+ctx.beginPath(); ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
+ctx.beginPath(); ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2); ctx.fill();
+if (o.type === 'fire') {
+ctx.fillStyle = '#facc15';
+ctx.beginPath(); ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2); ctx.fill();
+}
+} else {
+drawFighter(item.data);
+}
+});
+// Vẽ đạn & hiệu ứng chiêu thức
+projectiles.forEach(p => {
+ctx.fillStyle = p.color;
+ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+});
+particles.forEach(pt => {
+ctx.globalAlpha = pt.life / pt.maxLife;
+ctx.fillStyle = pt.color;
+ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2); ctx.fill();
+ctx.globalAlpha = 1;
+});
+ctx.restore();
+}
+function drawFighter(f) {
+if (f.deathAlpha <= 0) return;
+ctx.save();
+ctx.globalAlpha = f.deathAlpha;
+ctx.translate(f.x, f.y);
+// Đổ bóng dưới chân (2.5D)
+ctx.fillStyle = 'rgba(0,0,0,0.4)';
+ctx.beginPath(); ctx.ellipse(0, 26, 24, 12, 0, 0, Math.PI * 2); ctx.fill();
+// Tính toán biến đổi cho 7 trạng thái Animation
+let scaleX = f.facing, scaleY = 1, rot = 0, offsetY = 0;
+if (f.state === 'Idle') {
+scaleY = 1 + Math.sin(f.animTick * 0.5) * 0.04;
+} else if (f.state === 'Walk') {
+offsetY = -Math.abs(Math.sin(f.animTick * 1.4)) * 8;
+rot = Math.sin(f.animTick * 1.4) * 0.08;
+} else if (f.state === 'Attack') {
+rot = f.facing * 0.25;
+scaleX = f.facing * 1.15;
+} else if (f.state === 'Skill') {
+scaleX = f.facing * 1.25; scaleY = 1.25;
+} else if (f.state === 'Hit') {
+offsetY = -5; rot = -f.facing * 0.2;
+} else if (f.state === 'Dash') {
+scaleX = f.facing * 1.3; scaleY = 0.8;
+} else if (f.state === 'Death') {
+rot = f.facing * (Math.PI / 2);
+offsetY = 15;
+}
+ctx.save();
+ctx.translate(0, offsetY);
+ctx.rotate(rot);
+ctx.scale(scaleX, scaleY);
+const size = 64 + f.level * 2;
+ctx.drawImage(charSprites[f.id], -size / 2, -size + 25, size, size * 1.12);
+// Hiệu ứng nháy đỏ khi nhận sát thương (Hit)
+if (f.state === 'Hit') {
+ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+ctx.fillRect(-size / 2, -size + 25, size, size * 1.12);
+}
+ctx.restore();
+// Thanh máu & Tên trên đầu
+if (f.state !== 'Death') {
+ctx.fillStyle = '#0f172a'; ctx.fillRect(-26, -52, 52, 6);
+ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
+ctx.fillRect(-25, -51, 50 * (f.hp / f.maxHp), 4);
+ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+ctx.fillText(Lv.${f.level} ${f.name}, 0, -57);
+}
+ctx.restore();
+}
+let lastTime = performance.now();
+function gameLoop(now) {
+if (!gameRunning) return;
+const dt = (now - lastTime) / 1000;
+lastTime = now;
+update(dt);
+draw();
+requestAnimationFrame(gameLoop);
+}
+document.getElementById('start-btn').onclick = initArena;
+document.getElementById('restart-btn').onclick = initArena;
