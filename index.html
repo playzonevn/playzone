@@ -201,6 +201,117 @@ footer{text-align:center;color:var(--muted);padding:30px;border-top:1px solid #2
 .info{color:var(--muted);margin:12px}
 canvas{background:#050a16;border:1px solid #35415c;border-radius:10px;max-width:100%}
 @media(max-width:600px){header{padding:15px}.logo{font-size:21px}.hero{padding-top:45px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.game-card{padding:15px;min-height:155px}.cell{width:48px;height:48px}}
+
+/* ===== PLAYZONE FOOTER DESIGN ===== */
+
+.page-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 20px;
+  margin-top: 45px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.page-links button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.page-links button:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--panel2);
+  transform: translateY(-2px);
+}
+
+/* ===== INFORMATION POPUP ===== */
+
+.page-modal {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.page-content {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--cyan);
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow: 0 0 35px rgba(53, 217, 255, 0.15);
+  animation: pageAppear 0.25s ease;
+}
+
+.page-content > button {
+  display: block;
+  margin-left: auto;
+  background: var(--panel2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 13px;
+  font-size: 13px;
+}
+
+.page-content > button:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+#pageContent h2 {
+  color: var(--cyan);
+  font-size: 25px;
+  margin: 20px 0;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+#pageContent p {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 15px 0;
+}
+
+@keyframes pageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media(max-width:600px) {
+  .page-links {
+    gap: 6px;
+    padding: 22px 10px;
+  }
+
+  .page-links button {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .page-content {
+    padding: 20px;
+  }
+
+  #pageContent h2 {
+    font-size: 21px;
+  }
+}
 </style>
 </head>
 <body>
@@ -222,9 +333,6 @@ canvas{background:#050a16;border:1px solid #35415c;border-radius:10px;max-width:
  <p id="heroDesc">Your world. Your games. Your rules.</p>
  <input class="search" id="search" placeholder="🔍 Tìm kiếm trò chơi...">
 </section>
- <div class="ad-slot">
-  ADVERTISEMENT SPACE
-</div>
 <main>
  <div class="section-title"><h2 id="listTitle">🎮 Khám phá trò chơi</h2><span class="count">16 GAMES</span></div>
 <div class="category-bar" id="categoryBar">
@@ -283,7 +391,7 @@ const games=[
  ["➗","Math Challenge","Thử thách toán học","Math Challenge"],
  ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"]
 ];
-
+let english = false;
 /* THEME SYSTEM */
 const themeSelect = document.getElementById("themeSelect");
 
