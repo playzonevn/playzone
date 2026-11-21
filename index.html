@@ -334,7 +334,7 @@ canvas{background:#050a16;border:1px solid #35415c;border-radius:10px;max-width:
  <input class="search" id="search" placeholder="🔍 Tìm kiếm trò chơi...">
 </section>
 <main>
- <div class="section-title"><h2 id="listTitle">🎮 Khám phá trò chơi</h2><span class="count">16 GAMES</span></div>
+ <div class="section-title"><h2 id="listTitle">🎮 Khám phá trò chơi</h2><span class="count">17 GAMES</span></div>
 <div class="category-bar" id="categoryBar">
   <button class="category-btn active" data-category="All">All</button>
   <button class="category-btn" data-category="Arcade">Arcade</button>
@@ -389,7 +389,10 @@ const games=[
  ["⌨️","Typing Speed","Thử tốc độ gõ","Typing Speed"],
  ["⚡","Reaction Test","Kiểm tra phản xạ","Reaction Test"],
  ["➗","Math Challenge","Thử thách toán học","Math Challenge"],
- ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"]
+ ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"],
+ ["➗","Math Challenge","Thử thách toán học","Math Challenge"],
+ ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"],
+ ["🏹","Đấu Trường Bộ Lạc","Sinh tồn ăn nấm tăng cấp","Tribal Arena"]
 ];
 let english = false;
 /* THEME SYSTEM */
@@ -430,7 +433,8 @@ const gameCategories = [
   "Brain",
   "Action",
   "Brain",
-  "Strategy"
+  "Strategy",
+  "Action"
 ];
 const grid=document.getElementById("gameGrid");
 const search=document.getElementById("search");
@@ -440,7 +444,8 @@ function drawGrid(){
   let name=english?g[3]:g[1],desc=english?g[3]:g[2];
   if(!(name+" "+desc).toLowerCase().includes(search.value.toLowerCase()))return;
   let card=document.createElement("div");card.className="game-card";
-  card.innerHTML=`<div class="emoji">${g[0]}</div><h3>${name}</h3><p>${desc}</p><span class="play">${english?"▶ PLAY NOW":"▶ CHƠI NGAY"}</span>`;
+  card.innerHTML=`${i===16 ? '<img src="cover-bo-lac.png" style="width:100%;height:95px;object-fit:cover;border-radius:10px;margin-bottom:10px;">' : `<div class="emoji">${g[0]}</div>`}
+<h3>${name}</h3><p>${desc}</p><span class="play">${english?"▶ PLAY NOW":"▶ CHƠI NGAY"}</span>`;
   card.onclick=()=>openGame(i);grid.appendChild(card);
  });
 }
@@ -460,6 +465,7 @@ document.getElementById("closeBtn").onclick=()=>{modal.classList.remove("show");
 let cleanup=()=>{};
 function stopGame(){cleanup();cleanup=()=>{}}
 function openGame(i){
+ if(i===16){ window.location.href = "dau-truong-bo-lac.html"; return; }
  stopGame();modal.classList.add("show");
  document.getElementById("gameTitle").textContent=games[i][0]+" "+(english?games[i][3]:games[i][1]);
  area.innerHTML="";
