@@ -6,7 +6,160 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PLAYZONE - Neon Gaming</title>
 <style>
-:root{--bg:#080b16;--panel:#11182a;--panel2:#19233a;--cyan:#35d9ff;--purple:#a855f7;--text:#f4f7ff;--muted:#929db5}
+
+/* PLAYZONE UPGRADE */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.theme-select {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px;
+}
+
+.category-bar {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding: 12px 0;
+}
+
+.category-btn {
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 30px;
+  padding: 9px 15px;
+  cursor: pointer;
+}
+
+.category-btn.active,
+.category-btn:hover {
+  background: var(--cyan);
+  color: #08101b;
+}
+
+.ad-slot {
+  width: 100%;
+  min-height: 90px;
+  border: 1px dashed var(--muted);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 25px 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.page-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #000b;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.page-modal.show {
+  display: flex;
+}
+
+.page-content {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 25px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media(max-width:768px) {
+  .category-bar {
+    flex-wrap: nowrap;
+  }
+}
+
+:root {
+  --bg: #080b16;
+  --panel: #11182a;
+  --panel2: #19233a;
+  --text: #f4f7ff;
+  --muted: #929db5;
+  --cyan: #35d9ff;
+  --purple: #a855f7;
+  --pink: #ff4fd8;
+  --line: #26334f;
+  --shadow: 0 18px 55px #0008;
+}
+
+/* MATRIX */
+body[data-theme="matrix"] {
+  --bg: #020a05;
+  --panel: #07180d;
+  --panel2: #0c2815;
+  --text: #d7ffe1;
+  --muted: #80b58d;
+  --cyan: #39ff78;
+  --purple: #00a84f;
+  --line: #174b2b;
+}
+
+/* RETRO ARCADE */
+body[data-theme="retro"] {
+  --bg: #171027;
+  --panel: #26183f;
+  --panel2: #352052;
+  --text: #fff1d6;
+  --muted: #c4a9d8;
+  --cyan: #ffe66d;
+  --purple: #ff5c8a;
+  --line: #60417c;
+}
+
+/* LIGHT MODERN */
+body[data-theme="light"] {
+  --bg: #eef3fb;
+  --panel: #ffffff;
+  --panel2: #e4ebf7;
+  --text: #18243a;
+  --muted: #61718c;
+  --cyan: #087fa5;
+  --purple: #7651bd;
+  --line: #cbd6e7;
+  --shadow: 0 18px 55px #263b5b22;
+}
+
+/* CANDY POP */
+body[data-theme="candy"] {
+  --bg: #fff0f7;
+  --panel: #ffffff;
+  --panel2: #ffe0ef;
+  --text: #46213b;
+  --muted: #92647f;
+  --cyan: #e63b9a;
+  --purple: #8e56db;
+  --line: #f2c5df;
+}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
 header{padding:22px 6%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #25304a;background:#0b1020;position:sticky;top:0;z-index:5}
@@ -53,18 +206,57 @@ canvas{background:#050a16;border:1px solid #35415c;border-radius:10px;max-width:
 <body>
 <header>
  <div class="logo">PLAY<span>ZONE</span> ⚡</div>
- <button class="lang" id="langBtn">🇻🇳 Tiếng Việt</button>
+
+<select id="themeSelect" class="theme-select">
+  <option value="neon">⚡ Neon Cyber</option>
+  <option value="matrix">💚 Matrix</option>
+  <option value="retro">🕹️ Retro Arcade</option>
+  <option value="light">☀️ Light Modern</option>
+  <option value="candy">🍬 Candy Pop</option>
+</select>
+
+<button class="lang" id="langBtn">🇻🇳 Tiếng Việt</button>
 </header>
 <section class="hero">
  <h1 id="heroTitle">ENTER THE <span>GAME ZONE</span></h1>
  <p id="heroDesc">Your world. Your games. Your rules.</p>
  <input class="search" id="search" placeholder="🔍 Tìm kiếm trò chơi...">
 </section>
+ <div class="ad-slot">
+  ADVERTISEMENT SPACE
+</div>
 <main>
  <div class="section-title"><h2 id="listTitle">🎮 Khám phá trò chơi</h2><span class="count">16 GAMES</span></div>
- <div class="grid" id="gameGrid"></div>
+<div class="category-bar" id="categoryBar">
+  <button class="category-btn active" data-category="All">All</button>
+  <button class="category-btn" data-category="Arcade">Arcade</button>
+  <button class="category-btn" data-category="Puzzle">Puzzle</button>
+  <button class="category-btn" data-category="Strategy">Strategy</button>
+  <button class="category-btn" data-category="Action">Action</button>
+  <button class="category-btn" data-category="Brain">Brain</button>
+  <button class="category-btn" data-category="Sports">Sports</button>
+</div>
+
+<div class="grid" id="gameGrid"></div>
+<div id="gameCount"></div>
+
 </main>
-<footer>© 2026 PLAYZONE · PLAY MORE. HAVE FUN.</footer>
+
+<div class="page-links">
+  <button onclick="showPage('about')">About Us</button>
+  <button onclick="showPage('contact')">Contact Us</button>
+  <button onclick="showPage('privacy')">Privacy Policy</button>
+  <button onclick="showPage('terms')">Terms of Service</button>
+  <button onclick="showPage('disclaimer')">Disclaimer</button>
+  <button onclick="showPage('cookies')">Cookie Policy</button>
+</div>
+
+<div id="pageModal" class="page-modal">
+  <div class="page-content">
+    <button onclick="closePage()">✕ Close</button>
+    <div id="pageContent"></div>
+  </div>
+</div>
 <div class="modal" id="modal">
  <div class="dialog">
   <button class="close" id="closeBtn">✕</button>
@@ -91,7 +283,47 @@ const games=[
  ["➗","Math Challenge","Thử thách toán học","Math Challenge"],
  ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"]
 ];
-let english=false;
+
+/* THEME SYSTEM */
+const themeSelect = document.getElementById("themeSelect");
+
+function setTheme(theme) {
+  document.body.dataset.theme = theme;
+  localStorage.setItem("playzone-theme", theme);
+}
+
+themeSelect.addEventListener("change", function () {
+  setTheme(this.value);
+});
+
+const savedTheme = localStorage.getItem("playzone-theme");
+
+if (savedTheme) {
+  themeSelect.value = savedTheme;
+  setTheme(savedTheme);
+}
+
+/* GAME CATEGORY */
+let activeCategory = "All";
+
+const gameCategories = [
+  "Arcade",
+  "Strategy",
+  "Puzzle",
+  "Brain",
+  "Puzzle",
+  "Arcade",
+  "Sports",
+  "Arcade",
+  "Brain",
+  "Action",
+  "Brain",
+  "Brain",
+  "Brain",
+  "Action",
+  "Brain",
+  "Strategy"
+];
 const grid=document.getElementById("gameGrid");
 const search=document.getElementById("search");
 function drawGrid(){
@@ -269,6 +501,48 @@ function openGame(i){
   for(let c=0;c<7;c++)cell(b,"↓",()=>{if(done)return;let r=5;while(r>=0&&a[r*7+c])r--;if(r<0)return;let j=r*7+c;a[j]=turn;b.children[j].textContent=turn;if(win(j)){done=true;say(turn+" wins!")}else if(a.every(Boolean)){done=true;say("Draw!")}else turn=turn==="🔴"?"🟡":"🔴";});
   btn("↻ Restart",again);
  }
+}
+ 
+const pageData = {
+  about: {
+    title: "About PlayZone",
+    text: "PlayZone is a collection of free online mini-games for everyone. Our goal is to provide a fun and accessible gaming experience."
+  },
+  contact: {
+    title: "Contact Us",
+    text: "If you have any questions, feedback or business inquiries, please contact us at: trinhhiep2k@gmail.com"
+  },
+  privacy: {
+    title: "Privacy Policy",
+    text: "PlayZone respects your privacy. We may collect basic technical information to maintain and improve the website. If third-party analytics or advertising services are enabled, they may use cookies or similar technologies. Please contact us at trinhhiep2k@gmail.com for privacy-related questions."
+  },
+  terms: {
+    title: "Terms of Service",
+    text: "By using PlayZone, you agree to use this website lawfully and responsibly. Games are provided for entertainment. We may update, change or remove website features when necessary."
+  },
+  disclaimer: {
+    title: "Disclaimer",
+    text: "PlayZone is provided for entertainment purposes. We do not guarantee that the website will always be available or error-free. Users access and use the website at their own discretion."
+  },
+  cookies: {
+    title: "Cookie Policy",
+    text: "PlayZone may use cookies and similar technologies to support website functions, understand website usage and display advertisements if advertising services are enabled. You can manage cookies through your browser settings."
+  }
+};
+
+function showPage(page) {
+  const data = pageData[page];
+
+  if (!data) return;
+
+  document.getElementById("pageContent").innerHTML =
+    `<h2>${data.title}</h2><p>${data.text}</p>`;
+
+  document.getElementById("pageModal").classList.add("show");
+}
+
+function closePage() {
+  document.getElementById("pageModal").classList.remove("show");
 }
 drawGrid();
 </script>
