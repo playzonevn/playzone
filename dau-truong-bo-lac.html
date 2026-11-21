@@ -6,96 +6,102 @@
 <title>Đấu Trường Bộ Lạc - PLAYZONE</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, sans-serif; }
-  body { background: #0f172a; color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+  body { background: #0f172a; color: #fff; overflow: hidden; height: 100vh; }
   #select-screen {
-    position: absolute; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 20px;
+    position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 16px;
   }
-  h1 { font-size: 2.3rem; color: #facc15; text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 2px; }
-  .subtitle { color: #94a3b8; margin-bottom: 20px; font-size: 0.95rem; }
-  .char-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 780px; width: 100%; margin-bottom: 22px; }
+  h1 { font-size: 2.2rem; color: #facc15; text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); margin-bottom: 6px; text-transform: uppercase; text-align: center; }
+  .subtitle { color: #94a3b8; margin-bottom: 18px; font-size: 0.95rem; text-align: center; }
+  .char-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    max-width: 780px; width: 100%; margin-bottom: 20px;
+  }
   .char-card {
-    background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 10px;
-    text-align: center; cursor: pointer; transition: all 0.2s;
+    background: #1e293b; border: 2px solid #334155; border-radius: 14px; padding: 10px;
+    text-align: center; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
   }
   .char-card:hover { transform: translateY(-4px); border-color: #38bdf8; }
-  .char-card.selected { border-color: #facc15; background: #1e3a8a; box-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
-  .char-card canvas { width: 96px; height: 110px; border-radius: 8px; background: #0f172a; display: block; margin: 0 auto 8px; }
-  .char-name { font-weight: bold; font-size: 1rem; color: #f8fafc; }
+  .char-card.selected { border-color: #facc15; background: #1e3a8a; box-shadow: 0 0 18px rgba(250, 204, 21, 0.45); }
+  .char-card canvas { width: 88px; height: 88px; display: block; margin: 0 auto 6px; }
+  .char-name { font-weight: bold; font-size: 1rem; color: #fff; }
   .char-role { font-size: 0.8rem; color: #38bdf8; margin-top: 2px; }
   .btn-row { display: flex; gap: 14px; }
-  #start-btn, #restart-btn {
-    padding: 13px 38px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 30px;
-    background: linear-gradient(90deg, #f59e0b, #ef4444); color: white; cursor: pointer;
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); transition: transform 0.15s;
+  .btn-main {
+    padding: 13px 36px; font-size: 1.05rem; font-weight: bold; border: none; border-radius: 30px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; cursor: pointer;
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
   }
-  .back-btn {
-    padding: 13px 26px; font-size: 1rem; font-weight: bold; border: 1px solid #475569; border-radius: 30px;
-    background: #1e293b; color: #cbd5e1; cursor: pointer; text-decoration: none;
+  .btn-back {
+    padding: 13px 24px; font-size: 1rem; font-weight: bold; border: 1px solid #475569; border-radius: 30px;
+    background: #1e293b; color: #cbd5e1; text-decoration: none; display: inline-flex; align-items: center;
   }
-  #start-btn:hover, #restart-btn:hover, .back-btn:hover { transform: scale(1.05); }
-  #hud { position: absolute; inset: 0; pointer-events: none; display: none; }
-  .top-bar { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-  .stats-box, .leaderboard { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 12px 16px; border-radius: 12px; }
-  .bar-bg { width: 190px; height: 11px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+  .btn-main:hover, .btn-back:hover { transform: scale(1.05); }
+
+  #hud { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 5; }
+  .top-bar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .box { background: rgba(15, 23, 42, 0.86); border: 1px solid #334155; padding: 10px 15px; border-radius: 12px; }
+  .bar-bg { width: 200px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 6px; }
   .hp-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.1s; }
-  .xp-fill { height: 100%; background: #facc15; width: 0%; transition: width 0.2s; }
-  .leaderboard { min-width: 185px; }
-  .leaderboard h3 { font-size: 0.9rem; color: #facc15; margin-bottom: 6px; border-bottom: 1px solid #334155; padding-bottom: 4px; }
-  .lb-item { font-size: 0.85rem; display: flex; justify-content: space-between; margin: 3px 0; }
+  .xp-fill { height: 100%; background: #facc15; width: 0%; transition: width 0.15s; }
+  .buff-bar { display: flex; gap: 8px; margin-top: 8px; font-size: 0.8rem; font-weight: bold; }
+  .buff-tag { background: #1e3a8a; border: 1px solid #38bdf8; padding: 3px 8px; border-radius: 6px; color: #bae6fd; }
+
   .controls-hint {
-    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.85); padding: 8px 18px; border-radius: 20px;
-    border: 1px solid #334155; font-size: 0.85rem; color: #cbd5e1; white-space: nowrap;
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.86); padding: 8px 18px; border-radius: 20px;
+    border: 1px solid #334155; font-size: 0.84rem; color: #cbd5e1; white-space: nowrap;
   }
   .key { background: #334155; color: #facc15; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
   #game-over {
-    position: absolute; inset: 0; background: rgba(9, 13, 22, 0.88);
+    position: fixed; inset: 0; background: rgba(9, 13, 22, 0.9);
     display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
   }
-  canvas#arena { display: block; background: #365314; }
-  @media(max-width:650px){ .char-grid { grid-template-columns: repeat(2, 1fr); max-height: 55vh; overflow-y: auto; } }
+  canvas#arena { display: block; background: #7cb342; }
+  @media(max-width:650px){ .char-grid { grid-template-columns: repeat(2, 1fr); max-height: 52vh; overflow-y: auto; } }
 </style>
 </head>
 <body>
 
 <div id="select-screen">
   <h1>Đấu Trường Bộ Lạc</h1>
-  <p class="subtitle">Ăn nấm tăng cấp • Sinh tồn 16 chiến binh • Làm chủ thung lũng</p>
+  <p class="subtitle">Chọn chiến binh 4 hướng • Ăn nấm cute tăng cấp • Nhặt Nam Châm & Giày Tốc Độ</p>
   <div class="char-grid" id="char-grid"></div>
   <div class="btn-row">
-    <a href="index.html" class="back-btn">⬅ Trang chủ</a>
-    <button id="start-btn">VÀO TRẬN CHIẾN</button>
+    <a href="index.html" class="btn-back">⬅ Trang chủ</a>
+    <button class="btn-main" id="start-btn">VÀO TRẬN CHIẾN</button>
   </div>
 </div>
 
 <div id="hud">
   <div class="top-bar">
-    <div class="stats-box">
+    <div class="box">
       <div id="player-title" style="font-weight:bold; color:#facc15;">Cấp 1 • Thiết Cốt</div>
       <div class="bar-bg"><div class="hp-fill" id="hp-bar"></div></div>
+      <div id="hp-text" style="font-size:0.75rem; color:#86efac; margin-top:2px;">560 / 560 HP</div>
       <div class="bar-bg" style="height:7px;"><div class="xp-fill" id="xp-bar"></div></div>
       <div id="alive-count" style="font-size:0.8rem; color:#94a3b8; margin-top:6px;">Còn sống: 16/16</div>
+      <div class="buff-bar" id="buff-bar"></div>
     </div>
-    <div class="leaderboard">
-      <h3>🏆 BẢNG XẾP HẠNG</h3>
-      <div id="lb-list"></div>
+    <div class="box" style="min-width:185px;">
+      <div style="font-weight:bold; color:#facc15; font-size:0.9rem; margin-bottom:5px; border-bottom:1px solid #334155; padding-bottom:4px;">🏆 BẢNG XẾP HẠNG</div>
+      <div id="lb-list" style="font-size:0.84rem;"></div>
     </div>
   </div>
   <div class="controls-hint">
-    <span class="key">WASD</span> Di chuyển &nbsp;|&nbsp;
-    <span class="key">Chuột Trái</span> Đánh thường &nbsp;|&nbsp;
+    <span class="key">WASD / Mũi tên</span> Di chuyển 4 hướng &nbsp;|&nbsp;
+    <span class="key">Chuột Trái / J</span> Đánh thường &nbsp;|&nbsp;
     <span class="key">Chuột Phải / E</span> Kỹ năng &nbsp;|&nbsp;
     <span class="key">Space</span> Lướt né
   </div>
 </div>
 
 <div id="game-over">
-  <h1 id="end-title">BẠN ĐÃ BỊ HẠ GỤC</h1>
+  <h1 id="end-title">KẾT THÚC TRẬN ĐẤU</h1>
   <p id="end-stats" class="subtitle" style="font-size:1.15rem; margin:12px 0 20px;"></p>
   <div class="btn-row">
-    <a href="index.html" class="back-btn">⬅ Trang chủ</a>
-    <button id="restart-btn">CHƠI LẠI</button>
+    <a href="index.html" class="btn-back">⬅ Trang chủ</a>
+    <button class="btn-main" id="restart-btn">CHƠI LẠI</button>
   </div>
 </div>
 
@@ -103,651 +109,299 @@
 
 <script>
 const CHARACTERS = [
-  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', row: 0, col: 0, hp: 160, spd: 3.1, dmg: 22, range: 65, type: 'melee', color: '#f97316' },
-  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', row: 0, col: 1, hp: 185, spd: 2.9, dmg: 19, range: 70, type: 'melee', color: '#94a3b8' },
-  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', row: 0, col: 2, hp: 115, spd: 3.5, dmg: 18, range: 320, type: 'ranged', color: '#eab308' },
-  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', row: 0, col: 3, hp: 110, spd: 3.6, dmg: 20, range: 340, type: 'ranged', color: '#38bdf8' },
-  { id: 4, name: 'U Linh', role: 'Pháp Sư', row: 1, col: 0, hp: 105, spd: 3.3, dmg: 24, range: 280, type: 'magic', color: '#2dd4bf' },
-  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', row: 1, col: 1, hp: 105, spd: 3.4, dmg: 25, range: 290, type: 'magic', color: '#c084fc' },
-  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', row: 1, col: 2, hp: 130, spd: 3.8, dmg: 23, range: 75, type: 'melee', color: '#4ade80' },
-  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', row: 1, col: 3, hp: 125, spd: 3.9, dmg: 24, range: 75, type: 'melee', color: '#f43f5e' }
+  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', hp: 580, spd: 3.2, dmg: 48, range: 85, type: 'melee', hair: '#ea580c', outfit: '#9a3412', weapon: 'hammer', accent: '#fb923c' },
+  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', hp: 650, spd: 3.0, dmg: 44, range: 90, type: 'melee', hair: '#e2e8f0', outfit: '#475569', weapon: 'shield', accent: '#38bdf8' },
+  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', hp: 460, spd: 3.6, dmg: 42, range: 360, type: 'ranged', hair: '#facc15', outfit: '#854d0e', weapon: 'bow', accent: '#fde047' },
+  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', hp: 450, spd: 3.7, dmg: 45, range: 380, type: 'ranged', hair: '#38bdf8', outfit: '#075985', weapon: 'crossbow', accent: '#7dd3fc' },
+  { id: 4, name: 'U Linh', role: 'Pháp Sư', hp: 440, spd: 3.4, dmg: 52, range: 320, type: 'magic', hair: '#2dd4bf', outfit: '#115e59', weapon: 'staff', accent: '#5eead4' },
+  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', hp: 440, spd: 3.5, dmg: 54, range: 330, type: 'magic', hair: '#c084fc', outfit: '#581c87', weapon: 'orb', accent: '#e879f9' },
+  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', hp: 510, spd: 3.9, dmg: 50, range: 95, type: 'melee', hair: '#4ade80', outfit: '#166534', weapon: 'sword', accent: '#86efac' },
+  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', hp: 500, spd: 4.0, dmg: 52, range: 95, type: 'melee', hair: '#f43f5e', outfit: '#881337', weapon: 'dual', accent: '#fda4af' }
 ];
 
 let selectedCharId = 0;
-const charSprites = [];
 
-function createFallbackSprites() {
-  CHARACTERS.forEach((c, idx) => {
-    const off = document.createElement('canvas');
-    off.width = 120; off.height = 140;
-    const octx = off.getContext('2d');
-    octx.fillStyle = c.color;
-    octx.beginPath(); octx.arc(60, 70, 42, 0, Math.PI * 2); octx.fill();
-    octx.lineWidth = 4; octx.strokeStyle = '#fff'; octx.stroke();
-    octx.fillStyle = '#fff'; octx.font = 'bold 15px sans-serif'; octx.textAlign = 'center';
-    octx.fillText(c.name, 60, 75);
-    charSprites[idx] = off;
-  });
-}
-
-// Khởi tạo ngay giao diện chọn tướng để không bao giờ bị trống màn hình
-createFallbackSprites();
-
-const gridImg = new Image();
-gridImg.src = 'characters-grid.png';
-gridImg.onload = () => {
-  const w = gridImg.width, h = gridImg.height;
-  const colX = [w * 0.145, w * 0.335, w * 0.525, w * 0.715];
-  const rowY = [h * 0.23, h * 0.58];
-  const cropW = w * 0.14, cropH = h * 0.26;
-  CHARACTERS.forEach((c, idx) => {
-    const off = document.createElement('canvas');
-    off.width = 140; off.height = 160;
-    off.getContext('2d').drawImage(gridImg, colX[c.col], rowY[c.row], cropW, cropH, 0, 0, 140, 160);
-    charSprites[idx] = off;
-  });
-  renderSelectGrid();
-};
-
-function renderSelectGrid() {
-  const grid = document.getElementById('char-grid');
-  grid.innerHTML = '';
-  CHARACTERS.forEach(c => {
-    const card = document.createElement('div');
-    card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
-    const cv = document.createElement('canvas');
-    cv.width = 96; cv.height = 110;
-    if (charSprites[c.id]) cv.getContext('2d').drawImage(charSprites[c.id], 0, 0, 96, 110);
-    card.appendChild(cv);
-    const infoDiv = document.createElement('div');
-    infoDiv.innerHTML = `<div class="char-name">${c.name}</div><div class="char-role">${c.role}</div>`;
-    card.appendChild(infoDiv);
-    card.onclick = () => { selectedCharId = c.id; renderSelectGrid(); };
-    grid.appendChild(card);
-  });
-}
-renderSelectGrid();
-
-const canvas = document.getElementById('arena');
-const ctx = canvas.getContext('2d');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize);
-resize();
-
-const MAP_SIZE = 2400;
-let entities = [], mushrooms = [], projectiles = [], obstacles = [], particles = [];
-let player = null, keys = {}, mouse = { x: 0, y: 0 }, gameRunning = false, lastTime = 0;
-
-window.addEventListener('keydown', e => {
-  keys[e.code] = true;
-  if (gameRunning && player && player.state !== 'Death') {
-    if (e.code === 'Space') triggerDash(player);
-    if (e.code === 'KeyE') triggerSkill(player);
-  }
-});
-window.addEventListener('keyup', e => keys[e.code] = false);
-window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-window.addEventListener('mousedown', e => {
-  if (!gameRunning || !player || player.state === 'Death') return;
-  if (e.button === 0) triggerAttack(player);
-  if (e.button === 2) triggerSkill(player);
-});
-window.addEventListener('contextmenu', e => e.preventDefault());
-
-function initArena() {
-  entities = []; mushrooms = []; projectiles = []; obstacles = []; particles = [];
-  for (let i = 0; i < 28; i++) {
-    obstacles.push({
-      x: 150 + Math.random() * (MAP_SIZE - 300),
-      y: 150 + Math.random() * (MAP_SIZE - 300),
-      r: 35 + Math.random() * 20,
-      type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
-    });
-  }
-  player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
-  entities.push(player);
-  for (let i = 1; i < 16; i++) {
-    const t = CHARACTERS[i % CHARACTERS.length];
-    const bot = createFighter(t, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
-    bot.name = t.name + ' #' + i;
-    entities.push(bot);
-  }
-  for (let i = 0; i < 90; i++) spawnMushroom();
-  document.getElementById('select-screen').style.display = 'none';
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('hud').style.display = 'block';
-  gameRunning = true;
-  lastTime = performance.now();
-  requestAnimationFrame(gameLoop);
-}
-
-function createFighter(template, x, y, isPlayer) {
-  return {
-    id: template.id,
-    name: template.name,
-    role: template.role,
-    type: template.type,
-    color: template.color,
-    isPlayer: isPlayer,
-    x: x,
-    y: y,
-    maxHp: template.hp,
-    hp: template.hp,
-    spd: template.spd,
-    dmg: template.dmg,
-    range: template.range,
-    level: 1,
-    xp: 0,
-    nextXp: 50,
-    kills: 0,
-    facing: 1,
-    angle: 0,
-    state: 'Idle',
-    stateTimer: 0,
-    animTick: Math.random() * 100,
-    atkCd: 0,
-    skillCd: 0,
-    dashCd: 0,
-    deathAlpha: 1
-  };
-}
-
-function spawnMushroom() {
-  const isRare = Math.random() < 0.2;
-  mushrooms.push({
-    x: 80 + Math.random() * (MAP_SIZE - 160),
-    y: 80 + Math.random() * (MAP_SIZE - 160),
-    xp: isRare ? 35 : 15,
-    color: isRare ? '#facc15' : '#f43f5e',
-    r: isRare ? 13 : 9
-  });
-}
-
-function setState(f, newState, duration) {
-  if (f.state !== 'Death') {
-    f.state = newState;
-    f.stateTimer = duration || 0.25;
-  }
-}
-
-function triggerAttack(f) {
-  if (f.atkCd > 0 || f.state === 'Death') return;
-  f.atkCd = 0.45;
-  setState(f, 'Attack', 0.22);
-
-  if (f.type === 'melee') {
-    addParticle(f.x + Math.cos(f.angle) * 40, f.y + Math.sin(f.angle) * 40, f.color, 28, 0.2);
-    for (let i = 0; i < entities.length; i++) {
-      const t = entities[i];
-      if (t !== f && t.state !== 'Death') {
-        const dist = Math.hypot(t.x - f.x, t.y - f.y);
-        if (dist <= f.range + f.level * 4) {
-          dealDamage(f, t, f.dmg + f.level * 3);
-        }
-      }
-    }
-  } else {
-    projectiles.push({
-      owner: f,
-      x: f.x,
-      y: f.y,
-      vx: Math.cos(f.angle) * 9,
-      vy: Math.sin(f.angle) * 9,
-      dmg: f.dmg + f.level * 3,
-      color: f.color,
-      life: 45,
-      r: 8
-    });
-  }
-}
-
-function triggerSkill(f) {
-  if (f.skillCd > 0 || f.state === 'Death') return;
-  f.skillCd = 3.5;
-  setState(f, 'Skill', 0.35);
-
-  if (f.type === 'melee') {
-    f.x += Math.cos(f.angle) * 75;
-    f.y += Math.sin(f.angle) * 75;
-    addParticle(f.x, f.y, f.color, 65, 0.35);
-    for (let i = 0; i < entities.length; i++) {
-      const t = entities[i];
-      if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 110) {
-        dealDamage(f, t, (f.dmg + f.level * 4) * 1.6);
-      }
-    }
-  } else {
-    for (let i = -2; i <= 2; i++) {
-      const a = f.angle + i * 0.18;
-      projectiles.push({
-        owner: f,
-        x: f.x,
-        y: f.y,
-        vx: Math.cos(a) * 10,
-        vy: Math.sin(a) * 10,
-        dmg: (f.dmg + f.level * 3) * 0.85,
-        color: '#facc15',
-        life: 45,
-        r: 10
-      });
-    }
-  }
-}
-
-function triggerDash(f) {
-  if (f.dashCd > 0 || f.state === 'Death') return;
-  f.dashCd = 2.0;
-  setState(f, 'Dash', 0.2);
-  f.x += Math.cos(f.angle) * 110;
-  f.y += Math.sin(f.angle) * 110;
-  addParticle(f.x, f.y, '#38bdf8', 35, 0.25);
-}
-
-function dealDamage(attacker, target, amount) {
-  if (target.state === 'Dash' || target.state === 'Death') return;
-  target.hp -= amount;
-  setState(target, 'Hit', 0.18);
-  addParticle(target.x, target.y - 20, '#ef4444', 18, 0.2);
-
-  if (target.hp <= 0) {
-    target.hp = 0;
-    target.state = 'Death';
-    attacker.kills++;
-    gainXp(attacker, 45 + target.level * 15);
-    attacker.hp = Math.min(attacker.maxHp, attacker.hp + 30);
-  }
-}
-
-function gainXp(f, amount) {
-  f.xp += amount;
-  while (f.xp >= f.nextXp) {
-    f.xp -= f.nextXp;
-    f.level++;
-    f.nextXp = Math.round(f.nextXp * 1.35);
-    f.maxHp += 25;
-    f.hp = f.maxHp;
-    addParticle(f.x, f.y, '#facc15', 50, 0.4);
-  }
-}
-
-function addParticle(x, y, color, radius, life) {
-  particles.push({
-    x: x,
-    y: y,
-    color: color,
-    radius: radius,
-    life: life,
-    maxLife: life
-  });
-}
-
-function update(dt) {
-  for (let idx = 0; idx < entities.length; idx++) {
-    const f = entities[idx];
-    f.animTick += dt * 8;
-    if (f.atkCd > 0) f.atkCd -= dt;
-    if (f.skillCd > 0) f.skillCd -= dt;
-    if (f.dashCd > 0) f.dashCd -= dt;
-
-    if (f.state === 'Death') {
-      f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8);
-      continue;
-    }
-
-    if (f.stateTimer > 0) {
-      f.stateTimer -= dt;
-      if (f.stateTimer <= 0) {
-        f.state = 'Idle';
-      }
-    }
-
-    let moveX = 0;
-    let moveY = 0;
-
-    if (f.isPlayer) {
-      if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
-      if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
-      if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
-      if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
-      f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
-    } else {
-      let nearestEnemy = null;
-      let minEDist = 360;
-
-      for (let j = 0; j < entities.length; j++) {
-        const other = entities[j];
-        if (other !== f && other.state !== 'Death') {
-          const d = Math.hypot(other.x - f.x, other.y - f.y);
-          if (d < minEDist) {
-            minEDist = d;
-            nearestEnemy = other;
-          }
-        }
-      }
-
-      if (nearestEnemy) {
-        f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
-        if (minEDist > f.range * 0.85) {
-          moveX = Math.cos(f.angle);
-          moveY = Math.sin(f.angle);
-        } else {
-          triggerAttack(f);
-          if (Math.random() < 0.02) triggerSkill(f);
-          if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
-        }
-      } else {
-        let nearestMush = null;
-        let minMDist = 9999;
-
-        for (let m = 0; m < mushrooms.length; m++) {
-          const d = Math.hypot(mushrooms[m].x - f.x, mushrooms[m].y - f.y);
-          if (d < minMDist) {
-            minMDist = d;
-            nearestMush = mushrooms[m];
-          }
-        }
-
-        if (nearestMush) {
-          f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
-          moveX = Math.cos(f.angle);
-          moveY = Math.sin(f.angle);
-        }
-      }
-    }
-
-    if (moveX !== 0 || moveY !== 0) {
-      const len = Math.hypot(moveX, moveY);
-      f.x += (moveX / len) * f.spd;
-      f.y += (moveY / len) * f.spd;
-      if (moveX < 0) f.facing = -1;
-      if (moveX > 0) f.facing = 1;
-      if (f.state === 'Idle') f.state = 'Walk';
-    } else if (f.state === 'Walk') {
-      f.state = 'Idle';
-    }
-
-    f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
-    f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
-
-    for (let o = 0; o < obstacles.length; o++) {
-      const obs = obstacles[o];
-      const dx = f.x - obs.x;
-      const dy = f.y - obs.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < obs.r + 22 && dist > 0) {
-        f.x = obs.x + (dx / dist) * (obs.r + 22);
-        f.y = obs.y + (dy / dist) * (obs.r + 22);
-      }
-    }
-
-    for (let i = mushrooms.length - 1; i >= 0; i--) {
-      if (Math.hypot(f.x - mushrooms[i].x, f.y - mushrooms[i].y) < 34) {
-        gainXp(f, mushrooms[i].xp);
-        mushrooms.splice(i, 1);
-        spawnMushroom();
-      }
-    }
-  }
-
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    const p = projectiles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-    let hit = false;
-
-    for (let j = 0; j < entities.length; j++) {
-      const t = entities[j];
-      if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 28) {
-        dealDamage(p.owner, t, p.dmg);
-        hit = true;
-      }
-    }
-
-    if (hit || p.life <= 0) {
-      projectiles.splice(i, 1);
-    }
-  }
-
-  for (let i = particles.length - 1; i >= 0; i--) {
-    particles[i].life -= dt;
-    if (particles[i].life <= 0) {
-      particles.splice(i, 1);
-    }
-  }
-
-  updateHUD();
-}
-
-function updateHUD() {
-  const alive = entities.filter(function(e) {
-    return e.state !== 'Death';
-  });
-
-  document.getElementById('player-title').innerText =
-    'Cấp ' + player.level + ' • ' + player.name + ' (' + player.kills + ' Hạ gục)';
-  document.getElementById('hp-bar').style.width = ((player.hp / player.maxHp) * 100) + '%';
-  document.getElementById('xp-bar').style.width = ((player.xp / player.nextXp) * 100) + '%';
-  document.getElementById('alive-count').innerText = 'Còn sống: ' + alive.length + '/16';
-
-  const top5 = alive
-    .slice()
-    .sort(function(a, b) {
-      return b.level - a.level || b.kills - a.kills;
-    })
-    .slice(0, 5);
-
-  let lbHtml = '';
-  for (let i = 0; i < top5.length; i++) {
-    const e = top5[i];
-    const color = e.isPlayer ? '#facc15' : '#e2e8f0';
-    lbHtml +=
-      '<div style="display:flex;justify-content:space-between;margin:2px 0;color:' +
-      color +
-      '"><span>' +
-      (i + 1) +
-      '. ' +
-      e.name +
-      '</span><span>Lv.' +
-      e.level +
-      '</span></div>';
-  }
-  document.getElementById('lb-list').innerHTML = lbHtml;
-
-  if (player.state === 'Death' || alive.length === 1) {
-    gameRunning = false;
-    document.getElementById('game-over').style.display = 'flex';
-    document.getElementById('end-title').innerText =
-      player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
-    document.getElementById('end-stats').innerText =
-      'Đạt Cấp ' + player.level + ' • Hạ gục ' + player.kills + ' đối thủ';
-  }
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const camX = player.x - canvas.width / 2;
-  const camY = player.y - canvas.height / 2;
-
+// Hàm vẽ nhân vật Chibi 4 hướng (dir: 'down', 'up', 'left', 'right')
+function drawChibiCharacter(ctx, c, dir, animTick, state, isPreview) {
   ctx.save();
-  ctx.translate(-camX, -camY);
 
-  ctx.fillStyle = '#365314';
-  ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 2;
-  for (let x = 0; x <= MAP_SIZE; x += 100) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, MAP_SIZE);
-    ctx.stroke();
-  }
-  for (let y = 0; y <= MAP_SIZE; y += 100) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(MAP_SIZE, y);
-    ctx.stroke();
-  }
-
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-  for (let i = 0; i < mushrooms.length; i++) {
-    const m = mushrooms[i];
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(m.x, m.y + 6, m.r, m.r * 0.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#fef3c7';
-    ctx.fillRect(m.x - 3, m.y - 2, 6, 8);
-
-    ctx.fillStyle = m.color;
-    ctx.beginPath();
-    ctx.arc(m.x, m.y - 3, m.r, Math.PI, 0);
-    ctx.fill();
-  }
-
-  const renderList = [];
-  for (let i = 0; i < obstacles.length; i++) {
-    renderList.push({ kind: 'obs', y: obstacles[i].y, data: obstacles[i] });
-  }
-  for (let i = 0; i < entities.length; i++) {
-    renderList.push({ kind: 'fighter', y: entities[i].y, data: entities[i] });
-  }
-  renderList.sort(function(a, b) {
-    return a.y - b.y;
-  });
-
-  for (let i = 0; i < renderList.length; i++) {
-    const item = renderList[i];
-    if (item.kind === 'obs') {
-      const o = item.data;
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
-      ctx.beginPath();
-      ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (o.type === 'fire') {
-        ctx.fillStyle = '#facc15';
-        ctx.beginPath();
-        ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else {
-      drawFighter(item.data);
-    }
-  }
-
-  for (let i = 0; i < projectiles.length; i++) {
-    const p = projectiles[i];
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  for (let i = 0; i < particles.length; i++) {
-    const pt = particles[i];
-    ctx.globalAlpha = pt.life / pt.maxLife;
-    ctx.fillStyle = pt.color;
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  ctx.restore();
-}
-
-function drawFighter(f) {
-  if (f.deathAlpha <= 0) return;
-
-  ctx.save();
-  ctx.globalAlpha = f.deathAlpha;
-  ctx.translate(f.x, f.y);
-
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.ellipse(0, 26, 24, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  let scaleX = f.facing;
+  let bobY = 0;
+  let tilt = 0;
+  let scaleX = 1;
   let scaleY = 1;
-  let rot = 0;
-  let offsetY = 0;
 
-  if (f.state === 'Idle') {
-    scaleY = 1 + Math.sin(f.animTick * 0.5) * 0.04;
-  } else if (f.state === 'Walk') {
-    offsetY = -Math.abs(Math.sin(f.animTick * 1.4)) * 8;
-    rot = Math.sin(f.animTick * 1.4) * 0.08;
-  } else if (f.state === 'Attack') {
-    rot = f.facing * 0.25;
-    scaleX = f.facing * 1.15;
-  } else if (f.state === 'Skill') {
-    scaleX = f.facing * 1.25;
-    scaleY = 1.25;
-  } else if (f.state === 'Hit') {
-    offsetY = -5;
-    rot = -f.facing * 0.2;
-  } else if (f.state === 'Dash') {
-    scaleX = f.facing * 1.3;
-    scaleY = 0.8;
-  } else if (f.state === 'Death') {
-    rot = f.facing * (Math.PI / 2);
-    offsetY = 15;
+  if (state === 'Idle') {
+    scaleY = 1 + Math.sin(animTick * 0.6) * 0.04;
+  } else if (state === 'Walk') {
+    bobY = -Math.abs(Math.sin(animTick * 1.6)) * 6;
+    tilt = Math.sin(animTick * 1.6) * 0.1;
+  } else if (state === 'Attack') {
+    tilt = (dir === 'left' ? -0.25 : 0.25);
+    scaleX = 1.12;
+  } else if (state === 'Skill') {
+    scaleX = 1.22;
+    scaleY = 1.22;
+  } else if (state === 'Hit') {
+    bobY = -4;
+    tilt = -0.18;
+  } else if (state === 'Dash') {
+    scaleX = 1.28;
+    scaleY = 0.82;
+  } else if (state === 'Death') {
+    tilt = Math.PI / 2;
+    bobY = 14;
   }
 
-  ctx.save();
-  ctx.translate(0, offsetY);
-  ctx.rotate(rot);
+  ctx.translate(0, bobY);
+  ctx.rotate(tilt);
   ctx.scale(scaleX, scaleY);
 
-  const size = 64 + f.level * 2;
-  if (charSprites[f.id]) {
-    ctx.drawImage(charSprites[f.id], -size / 2, -size + 25, size, size * 1.12);
-  }
+  // Chân Chibi bước chạy
+  const legSwing = state === 'Walk' ? Math.sin(animTick * 1.6) * 5 : 0;
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.arc(-8, 16 + legSwing, 5, 0, Math.PI * 2);
+  ctx.arc(8, 16 - legSwing, 5, 0, Math.PI * 2);
+  ctx.fill();
 
-  if (f.state === 'Hit') {
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
-    ctx.fillRect(-size / 2, -size + 25, size, size * 1.12);
-  }
-  ctx.restore();
+  // Thân áo bộ lạc
+  ctx.fillStyle = c.outfit;
+  ctx.beginPath();
+  ctx.roundRect(-14, -2, 28, 20, 8);
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#1e293b';
+  ctx.stroke();
 
-  if (f.state !== 'Death') {
+  // Đai lưng thổ cẩm
+  ctx.fillStyle = c.accent;
+  ctx.fillRect(-13, 8, 26, 4);
+
+  // Đầu Chibi tròn to
+  ctx.fillStyle = '#fed7aa';
+  ctx.beginPath();
+  ctx.arc(0, -14, 17, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Vẽ theo 4 hướng: Up, Down, Left, Right
+  if (dir === 'up') {
+    // Nhìn từ phía sau: Tóc phủ kín sau gáy + băng đô bộ lạc
+    ctx.fillStyle = c.hair;
+    ctx.beginPath();
+    ctx.arc(0, -15, 18.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = c.accent;
+    ctx.fillRect(-17, -18, 34, 5);
+  } else {
+    // Tóc mái phía trên
+    ctx.fillStyle = c.hair;
+    ctx.beginPath();
+    ctx.arc(0, -18, 18, Math.PI, 0);
+    ctx.fill();
+    ctx.stroke();
+
+    // Băng đô
+    ctx.fillStyle = c.accent;
+    ctx.fillRect(-16, -21, 32, 4);
+
+    // Mắt biểu cảm theo hướng nhìn
+    const eyeOffsetX = dir === 'left' ? -6 : (dir === 'right' ? 6 : 0);
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-26, -52, 52, 6);
-
-    ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
-    ctx.fillRect(-25, -51, 50 * (f.hp / f.maxHp), 4);
-
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Lv.' + f.level + ' ' + f.name, 0, -57);
-  }
-
-  ctx.restore();
+    if (dir === 'down') {
+      ctx.beginPath();
+      ctx.arc(-6, -12, 2.8, 0, Math.PI * 2);
+      ctx.arc(6, -12, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Má hồng cute
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath();
+      ctx.arc(-10, -8, 3, 0, Math.PI * 2);
+      ctx.arc(10, -8, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(eyeOffsetX - 3, -12, 2.8, 0, Math.PI * 2);
+ctx.arc(eyeOffsetX + 4, -12, 2.8, 0, Math.PI * 2);
+ctx.fill();
 }
-
-function gameLoop(now) {
-  if (!gameRunning) return;
-  const dt = Math.min(0.05, (now - lastTime) / 1000);
-  lastTime = now;
-  update(dt);
-  draw();
-  requestAnimationFrame(gameLoop);
 }
-document.getElementById('start-btn').onclick = initArena;
-document.getElementById('restart-btn').onclick = initArena;
-</script>
-</body>
-</html>
+// Vẽ vũ khí đặc trưng trên tay
+ctx.save();
+const handX = dir === 'left' ? -18 : (dir === 'right' ? 18 : 16);
+const atkSwing = state === 'Attack' ? 0.9 : (state === 'Skill' ? 1.4 : 0);
+ctx.translate(handX, 4);
+ctx.rotate((dir === 'left' ? -1 : 1) * atkSwing);
+if (c.weapon === 'hammer' || c.weapon === 'shield') {
+ctx.fillStyle = '#94a3b8';
+ctx.fillRect(-3, -18, 6, 22);
+ctx.fillStyle = c.accent;
+ctx.fillRect(-9, -24, 18, 10);
+} else if (c.weapon === 'sword' || c.weapon === 'dual') {
+ctx.fillStyle = c.accent;
+ctx.beginPath();
+ctx.moveTo(0, -26);
+ctx.lineTo(5, -4);
+ctx.lineTo(-5, -4);
+ctx.closePath();
+ctx.fill();
+} else if (c.weapon === 'bow' || c.weapon === 'crossbow') {
+ctx.strokeStyle = c.accent;
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.arc(0, -6, 12, -Math.PI / 2, Math.PI / 2);
+ctx.stroke();
+} else {
+// Trượng / Cầu phép
+ctx.fillStyle = '#78350f';
+ctx.fillRect(-2, -20, 4, 24);
+ctx.fillStyle = c.accent;
+ctx.beginPath();
+ctx.arc(0, -22, 6, 0, Math.PI * 2);
+ctx.fill();
+}
+ctx.restore();
+if (state === 'Hit') {
+ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+ctx.beginPath();
+ctx.arc(0, -6, 22, 0, Math.PI * 2);
+ctx.fill();
+}
+ctx.restore();
+}
+function renderSelectGrid() {
+const grid = document.getElementById('char-grid');
+grid.innerHTML = '';
+for (let i = 0; i < CHARACTERS.length; i++) {
+const c = CHARACTERS[i];
+const card = document.createElement('div');
+card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
+const cv = document.createElement('canvas');
+cv.width = 88;
+cv.height = 88;
+const pctx = cv.getContext('2d');
+pctx.translate(44, 54);
+drawChibiCharacter(pctx, c, 'down', 0, 'Idle', true);
+card.appendChild(cv);
+const label = document.createElement('div');
+label.innerHTML = '' + c.name + '' + c.role + ' • ' + c.hp + ' HP';
+card.appendChild(label);
+card.onclick = function() {
+selectedCharId = c.id;
+renderSelectGrid();
+};
+grid.appendChild(card);
+}
+}
+renderSelectGrid();
+const canvas = document.getElementById('arena');
+const ctx = canvas.getContext('2d');
+function resize() {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+const MAP_SIZE = 2400;
+let entities = [];
+let mushrooms = [];
+let items = [];
+let projectiles = [];
+let slashEffects = [];
+let obstacles = [];
+let particles = [];
+let floatingTexts = [];
+let player = null;
+let keys = {};
+let mouse = { x: 0, y: 0 };
+let gameRunning = false;
+let lastTime = 0;
+window.addEventListener('keydown', function(e) {
+keys[e.code] = true;
+if (gameRunning && player && player.state !== 'Death') {
+if (e.code === 'Space') triggerDash(player);
+if (e.code === 'KeyE' || e.code === 'KeyK') triggerSkill(player);
+if (e.code === 'KeyJ') triggerAttack(player);
+}
+});
+window.addEventListener('keyup', function(e) { keys[e.code] = false; });
+window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mousedown', function(e) {
+if (!gameRunning || !player || player.state === 'Death') return;
+if (e.button === 0) triggerAttack(player);
+if (e.button === 2) triggerSkill(player);
+});
+window.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+function initArena() {
+entities = [];
+mushrooms = [];
+items = [];
+projectiles = [];
+slashEffects = [];
+obstacles = [];
+particles = [];
+floatingTexts = [];
+for (let i = 0; i < 26; i++) {
+obstacles.push({
+x: 160 + Math.random() * (MAP_SIZE - 320),
+y: 160 + Math.random() * (MAP_SIZE - 320),
+r: 34 + Math.random() * 18,
+type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
+});
+}
+player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
+entities.push(player);
+for (let i = 1; i < 16; i++) {
+const t = CHARACTERS[i % CHARACTERS.length];
+const bot = createFighter(t, 160 + Math.random() * (MAP_SIZE - 320), 160 + Math.random() * (MAP_SIZE - 320), false);
+bot.name = t.name + ' #' + i;
+entities.push(bot);
+}
+for (let i = 0; i < 95; i++) spawnMushroom();
+for (let i = 0; i < 18; i++) spawnItem();
+document.getElementById('select-screen').style.display = 'none';
+document.getElementById('game-over').style.display = 'none';
+document.getElementById('hud').style.display = 'block';
+gameRunning = true;
+lastTime = performance.now();
+requestAnimationFrame(gameLoop);
+}
+function createFighter(template, x, y, isPlayer) {
+return {
+id: template.id,
+name: template.name,
+role: template.role,
+type: template.type,
+hair: template.hair,
+outfit: template.outfit,
+weapon: template.weapon,
+accent: template.accent,
+isPlayer: isPlayer,
+x: x,
+y: y,
+maxHp: template.hp,
+hp: template.hp,
+spd: template.spd,
+dmg: template.dmg,
+range: template.range,
+level: 1,
+xp: 0,
+nextXp: 60,
+kills: 0,
+dir: 'down',
+angle: 0,
+state: 'Idle',
+stateTimer: 0,
+animTick: Math.random() * 100,
+atkCd: 0,
+skillCd: 0,
+dashCd: 0,
+magnetTimer: 0,
+speedTimer: 0,
+deathAlpha: 1
+};
+}
