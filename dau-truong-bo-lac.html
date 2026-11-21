@@ -1,975 +1,549 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Đấu Trường Bộ Lạc - PLAYZONE</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: Arial, sans-serif; }
-  body { background: #0f172a; color: #fff; overflow: hidden; height: 100vh; }
-  #select-screen {
-    position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 15px;
-  }
-  h1 { font-size: 2.1rem; color: #facc15; margin-bottom: 6px; text-transform: uppercase; text-align: center; text-shadow: 0 0 15px rgba(250,204,21,0.5); }
-  .subtitle { color: #94a3b8; margin-bottom: 18px; font-size: 0.95rem; text-align: center; }
-  .char-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    max-width: 760px; width: 100%; margin-bottom: 20px;
-  }
-  .char-card {
-    background: #1e293b; border: 2px solid #334155; border-radius: 14px; padding: 10px;
-    text-align: center; cursor: pointer; transition: 0.15s;
-  }
-  .char-card.selected { border-color: #facc15; background: #1e3a8a; transform: translateY(-3px); box-shadow: 0 0 18px rgba(250,204,21,0.4); }
-  .char-card canvas { width: 84px; height: 92px; border-radius: 50%; background: #0f172a; display: block; margin: 0 auto 6px; border: 2px solid #475569; }
-  .char-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
-  .char-role { font-size: 0.78rem; color: #38bdf8; margin-top: 2px; }
-  .btn-row { display: flex; gap: 12px; }
-  .btn-main {
-    padding: 13px 36px; font-size: 1.05rem; font-weight: bold; border: none; border-radius: 30px;
-    background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; cursor: pointer;
-  }
-  .btn-back {
-    padding: 13px 24px; font-size: 1rem; font-weight: bold; border: 1px solid #475569; border-radius: 30px;
-    background: #1e293b; color: #cbd5e1; text-decoration: none; display: inline-flex; align-items: center;
-  }
-  #hud { position: fixed; inset: 0; pointer-events: none; display: none; z-index: 5; }
-  .top-bar { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; }
-  .box { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 10px 14px; border-radius: 12px; }
-  .bar-bg { width: 185px; height: 11px; background: #334155; border-radius: 6px; overflow: hidden; margin-top: 5px; }
-  .hp-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.1s; }
-  .xp-fill { height: 100%; background: #facc15; width: 0%; transition: width 0.15s; }
-  .buff-tags { display: flex; gap: 6px; margin-top: 6px; font-size: 0.75rem; font-weight: bold; }
-  .buff-tag { background: #1e3a8a; color: #38bdf8; padding: 2px 7px; border-radius: 6px; border: 1px solid #38bdf8; }
-  .controls-hint {
-    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.85); padding: 7px 16px; border-radius: 20px;
-    border: 1px solid #334155; font-size: 0.82rem; color: #cbd5e1; white-space: nowrap;
-  }
-  #game-over {
-    position: fixed; inset: 0; background: rgba(9, 13, 22, 0.9);
-    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
-  }
-  canvas#arena { display: block; background: #4d7c0f; }
-  @media(max-width:650px){ .char-grid { grid-template-columns: repeat(2, 1fr); max-height: 52vh; overflow-y: auto; } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ngôi Sao Bộ Lạc - Web Mobile Prototype</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #2c3e50; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+        
+        /* UI Overlay */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        /* Bảng xếp hạng góc trên phải */
+        #leaderboard {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0, 0, 0, 0.5); color: white;
+            padding: 10px; border-radius: 8px; font-size: 13px; min-width: 140px;
+        }
+        #leaderboard h4 { margin-bottom: 5px; color: #f1c40f; text-align: center; }
+        
+        /* Thanh chỉ số góc trên trái */
+        #stats {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0, 0, 0, 0.5); color: white;
+            padding: 10px; border-radius: 8px; font-size: 14px;
+        }
+
+        /* Bảng chọn 3 kỹ năng khi lên cấp */
+        #skill-modal {
+            display: none; position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+            gap: 10px; pointer-events: auto; z-index: 10;
+        }
+        .skill-btn {
+            background: linear-gradient(135deg, #f39c12, #d35400);
+            border: 3px solid #fff; border-radius: 12px; color: white;
+            padding: 10px 14px; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; text-align: center; min-width: 105px;
+        }
+        .skill-btn:active { transform: scale(0.95); }
+
+        /* Nút điều khiển trên điện thoại */
+        #controls { position: absolute; bottom: 25px; right: 25px; display: flex; gap: 15px; pointer-events: auto; }
+        .action-btn {
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8);
+            color: white; font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer;
+        }
+        #btn-attack { background: rgba(231, 76, 60, 0.85); width: 80px; height: 80px; }
+        #btn-dash { background: rgba(52, 152, 219, 0.85); margin-top: 10px; }
+        .action-btn:active { transform: scale(0.9); }
+
+        /* Màn hình Game Over */
+        #gameover-screen {
+            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.75);
+            flex-direction: column; align-items: center; justify-content: center; color: white; pointer-events: auto;
+        }
+        #gameover-screen button {
+            margin-top: 20px; padding: 12px 30px; font-size: 18px; font-weight: bold;
+            background: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-<div id="select-screen">
-  <h1>Đấu Trường Bộ Lạc</h1>
-  <p class="subtitle">4 Hướng Di Chuyển • Nhặt Nam Châm &amp; Giày • Sống Sót Cuối Cùng</p>
-  <div class="char-grid" id="char-grid"></div>
-  <div class="btn-row">
-    <a href="index.html" class="btn-back">⬅ Trang chủ</a>
-    <button id="start-btn" class="btn-main">VÀO TRẬN CHIẾN</button>
-  </div>
-</div>
+<canvas id="gameCanvas"></canvas>
 
-<div id="hud">
-  <div class="top-bar">
-    <div class="box">
-      <div id="player-title" style="font-weight:bold; color:#facc15;">Cấp 1</div>
-      <div class="bar-bg"><div class="hp-fill" id="hp-bar"></div></div>
-      <div class="bar-bg" style="height:6px;"><div class="xp-fill" id="xp-bar"></div></div>
-      <div id="alive-count" style="font-size:0.8rem; color:#94a3b8; margin-top:5px;">Còn sống: 16/16</div>
-      <div class="buff-tags" id="buff-tags"></div>
+<div id="ui-layer">
+    <div id="stats">
+        <div>Cấp độ: <b id="ui-level">1</b></div>
+        <div>Điểm (Nấm): <b id="ui-score">0</b></div>
     </div>
-    <div class="box" style="min-width:170px;">
-      <div style="font-weight:bold; color:#facc15; font-size:0.88rem; margin-bottom:4px;">🏆 BẢNG XẾP HẠNG</div>
-      <div id="lb-list" style="font-size:0.82rem;"></div>
+
+    <div id="leaderboard">
+        <h4>BẢNG XẾP HẠNG</h4>
+        <div id="lb-list"></div>
     </div>
-  </div>
-  <div class="controls-hint">WASD / Mũi tên: Di chuyển 4 hướng | Chuột Trái: Đánh | Chuột Phải / E: Kỹ năng | Space: Lướt</div>
-</div>
 
-<div id="game-over">
-  <h1 id="end-title">KẾT THÚC TRẬN ĐẤU</h1>
-  <p id="end-stats" class="subtitle" style="margin:12px 0 20px;"></p>
-  <div class="btn-row">
-    <a href="index.html" class="btn-back">⬅ Trang chủ</a>
-    <button id="restart-btn" class="btn-main">CHƠI LẠI</button>
-  </div>
-</div>
+    <div id="skill-modal"></div>
 
-<canvas id="arena"></canvas>
+    <div id="controls">
+        <div class="action-btn" id="btn-dash">LƯỚT</div>
+        <div class="action-btn" id="btn-attack">NỆN</div>
+    </div>
+
+    <div id="gameover-screen">
+        <h1>BẠN ĐÃ BỊ HẠ GỤC!</h1>
+        <p id="final-score" style="margin-top:10px; font-size:18px;"></p>
+        <button onclick="location.reload()">CHƠI LẠI</button>
+    </div>
+</div>
 
 <script>
-const CHARACTERS = [
-  { id: 0, name: 'Thiết Cốt', role: 'Đấu Sĩ', row: 0, col: 0, hp: 480, spd: 3.2, dmg: 26, range: 75, type: 'melee', color: '#f97316' },
-  { id: 1, name: 'Bàn Thạch', role: 'Đấu Sĩ', row: 0, col: 1, hp: 560, spd: 3.0, dmg: 22, range: 80, type: 'melee', color: '#94a3b8' },
-  { id: 2, name: 'Ưng Nhãn', role: 'Xạ Thủ', row: 0, col: 2, hp: 350, spd: 3.6, dmg: 21, range: 340, type: 'ranged', color: '#eab308' },
-  { id: 3, name: 'Lãnh Tiễn', role: 'Xạ Thủ', row: 0, col: 3, hp: 340, spd: 3.7, dmg: 23, range: 360, type: 'ranged', color: '#38bdf8' },
-  { id: 4, name: 'U Linh', role: 'Pháp Sư', row: 1, col: 0, hp: 320, spd: 3.4, dmg: 28, range: 300, type: 'magic', color: '#2dd4bf' },
-  { id: 5, name: 'Huyễn Ảnh', role: 'Pháp Sư', row: 1, col: 1, hp: 320, spd: 3.5, dmg: 29, range: 310, type: 'magic', color: '#c084fc' },
-  { id: 6, name: 'Vô Ngân', role: 'Kiếm Sĩ', row: 1, col: 2, hp: 390, spd: 3.9, dmg: 27, range: 85, type: 'melee', color: '#4ade80' },
-  { id: 7, name: 'Tàn Nguyệt', role: 'Kiếm Sĩ', row: 1, col: 3, hp: 380, spd: 4.0, dmg: 28, range: 85, type: 'melee', color: '#f43f5e' }
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+});
+
+const MAP_SIZE = 2000;
+const MUSHROOM_COUNT = 120;
+const BOT_COUNT = 10;
+
+const SKILLS_POOL = [
+    { id: 'spin', name: '🌪️ Chém Xoáy', desc: 'Đánh 360 độ' },
+    { id: 'magnet', name: '🧲 Nam Châm', desc: 'Hút nấm từ xa' },
+    { id: 'lifesteal', name: '🩸 Hút Máu', desc: 'Hồi máu khi đánh' },
+    { id: 'speed', name: '⚡ Thần Tốc', desc: '+20% tốc chạy' },
+    { id: 'damage', name: '🪓 Rìu Lớn', desc: '+25% sát thương' }
 ];
 
-let selectedCharId = 0;
-const charSprites = new Array(8);
+const joystick = { active: false, startX: 0, startY: 0, currX: 0, currY: 0, dx: 0, dy: 0, touchId: null };
 
-function buildDefaultSprites() {
-  for (let i = 0; i < CHARACTERS.length; i++) {
-    const c = CHARACTERS[i];
-    const off = document.createElement('canvas');
-    off.width = 120;
-    off.height = 120;
-    const octx = off.getContext('2d');
-    octx.fillStyle = c.color;
-    octx.beginPath();
-    octx.arc(60, 60, 44, 0, Math.PI * 2);
-    octx.fill();
-    octx.lineWidth = 4;
-    octx.strokeStyle = '#fff';
-    octx.stroke();
-    octx.fillStyle = '#fff';
-    octx.font = 'bold 14px Arial';
-    octx.textAlign = 'center';
-    octx.fillText(c.name, 60, 65);
-    charSprites[i] = off;
-  }
-}
+class Fighter {
+    constructor(name, x, y, color, isPlayer = false) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.isPlayer = isPlayer;
+        
+        this.baseRadius = 22;
+        this.radius = 22;
+        this.level = 1;
+        this.score = 0;
+        this.nextLevelScore = 50;
 
-function renderSelectGrid() {
-  const grid = document.getElementById('char-grid');
-  grid.innerHTML = '';
-  for (let i = 0; i < CHARACTERS.length; i++) {
-    const c = CHARACTERS[i];
-    const card = document.createElement('div');
-    card.className = 'char-card' + (c.id === selectedCharId ? ' selected' : '');
-    const cv = document.createElement('canvas');
-    cv.width = 84;
-    cv.height = 92;
-    if (charSprites[c.id]) {
-      cv.getContext('2d').drawImage(charSprites[c.id], 0, 0, 84, 92);
-    }
-    card.appendChild(cv);
-    const label = document.createElement('div');
-    label.innerHTML = '<div class="char-name">' + c.name + '</div><div class="char-role">' + c.role + ' • ❤️' + c.hp + '</div>';
-    card.appendChild(label);
-    card.onclick = function() {
-      selectedCharId = c.id;
-      renderSelectGrid();
-    };
-    grid.appendChild(card);
-  }
-}
+        this.maxHp = 100;
+        this.hp = 100;
+        this.maxStamina = 100;
+        this.stamina = 100;
 
-buildDefaultSprites();
-renderSelectGrid();
+        this.speed = 4.2;
+        this.damage = 25;
+        this.attackRange = 65;
+        this.angle = 0;
 
-const gridImg = new Image();
-gridImg.src = 'characters-grid.png';
-gridImg.onload = function() {
-  const w = gridImg.width;
-  const h = gridImg.height;
-  const colX = [w * 0.158, w * 0.348, w * 0.538, w * 0.728];
-  const rowY = [h * 0.255, h * 0.605];
-  const cropW = w * 0.115;
-  const cropH = h * 0.195;
+        this.vx = 0;
+        this.vy = 0;
+        this.attackAnim = 0;
+        this.dashTime = 0;
+        this.dead = false;
 
-  for (let i = 0; i < CHARACTERS.length; i++) {
-    const c = CHARACTERS[i];
-    const off = document.createElement('canvas');
-    off.width = 128;
-    off.height = 128;
-    const octx = off.getContext('2d');
-
-    octx.save();
-    octx.beginPath();
-    octx.arc(64, 64, 56, 0, Math.PI * 2);
-    octx.clip();
-    octx.drawImage(gridImg, colX[c.col], rowY[c.row], cropW, cropH, 4, 4, 120, 120);
-    octx.restore();
-
-    octx.lineWidth = 5;
-    octx.strokeStyle = c.color;
-    octx.beginPath();
-    octx.arc(64, 64, 56, 0, Math.PI * 2);
-    octx.stroke();
-
-    charSprites[i] = off;
-  }
-  renderSelectGrid();
-};
-
-const canvas = document.getElementById('arena');
-const ctx = canvas.getContext('2d');
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-const MAP_SIZE = 2400;
-let entities = [];
-let mushrooms = [];
-let items = [];
-let projectiles = [];
-let slashes = [];
-let obstacles = [];
-let particles = [];
-let player = null;
-let keys = {};
-let mouse = { x: 0, y: 0 };
-let gameRunning = false;
-let lastTime = 0;
-
-window.addEventListener('keydown', function(e) {
-  keys[e.code] = true;
-  if (gameRunning && player && player.state !== 'Death') {
-    if (e.code === 'Space') triggerDash(player);
-    if (e.code === 'KeyE') triggerSkill(player);
-  }
-});
-window.addEventListener('keyup', function(e) { keys[e.code] = false; });
-window.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
-window.addEventListener('mousedown', function(e) {
-  if (!gameRunning || !player || player.state === 'Death') return;
-  if (e.button === 0) triggerAttack(player);
-  if (e.button === 2) triggerSkill(player);
-});
-window.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
-function initArena() {
-  entities = [];
-  mushrooms = [];
-  items = [];
-  projectiles = [];
-  slashes = [];
-  obstacles = [];
-  particles = [];
-
-  for (let i = 0; i < 26; i++) {
-    obstacles.push({
-      x: 150 + Math.random() * (MAP_SIZE - 300),
-      y: 150 + Math.random() * (MAP_SIZE - 300),
-      r: 34 + Math.random() * 18,
-      type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
-    });
-  }
-
-  player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
-  entities.push(player);
-
-  for (let i = 1; i < 16; i++) {
-    const t = CHARACTERS[i % CHARACTERS.length];
-    const bot = createFighter(t, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
-    bot.name = t.name + ' #' + i;
-    entities.push(bot);
-  }
-
-  for (let i = 0; i < 100; i++) spawnMushroom();
-  for (let i = 0; i < 24; i++) spawnItem();
-
-  document.getElementById('select-screen').style.display = 'none';
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('hud').style.display = 'block';
-  gameRunning = true;
-  lastTime = performance.now();
-  requestAnimationFrame(gameLoop);
-}
-
-function createFighter(template, x, y, isPlayer) {
-  return {
-    id: template.id,
-    name: template.name,
-    role: template.role,
-    type: template.type,
-    color: template.color,
-    isPlayer: isPlayer,
-    x: x,
-    y: y,
-    maxHp: template.hp,
-    hp: template.hp,
-    spd: template.spd,
-    dmg: template.dmg,
-    range: template.range,
-    level: 1,
-    xp: 0,
-    nextXp: 50,
-    kills: 0,
-    dir: 'down',
-    facing: 1,
-    angle: 0,
-    state: 'Idle',
-    stateTimer: 0,
-    animTick: Math.random() * 100,
-    atkCd: 0,
-    skillCd: 0,
-    dashCd: 0,
-    magnetTimer: 0,
-    speedTimer: 0,
-    deathAlpha: 1
-  };
-}
-
-function spawnMushroom() {
-  const isRare = Math.random() < 0.22;
-  mushrooms.push({
-    x: 80 + Math.random() * (MAP_SIZE - 160),
-    y: 80 + Math.random() * (MAP_SIZE - 160),
-    xp: isRare ? 35 : 15,
-    capColor: isRare ? '#facc15' : '#fb7185',
-    spotColor: isRare ? '#fef08a' : '#fff1f2',
-    r: isRare ? 14 : 10,
-    bob: Math.random() * 6
-  });
-}
-
-function spawnItem() {
-  const rand = Math.random();
-  let kind = 'heal';
-  if (rand < 0.35) kind = 'magnet';
-  else if (rand < 0.7) kind = 'boots';
-
-  items.push({
-    x: 100 + Math.random() * (MAP_SIZE - 200),
-    y: 100 + Math.random() * (MAP_SIZE - 200),
-    kind: kind,
-    bob: Math.random() * 6
-  });
-}
-
-function setState(f, newState, duration) {
-  if (f.state !== 'Death') {
-    f.state = newState;
-    f.stateTimer = duration || 0.25;
-  }
-}
-
-function triggerAttack(f) {
-  if (f.atkCd > 0 || f.state === 'Death') return;
-  f.atkCd = 0.42;
-  setState(f, 'Attack', 0.22);
-
-  if (f.type === 'melee') {
-    slashes.push({
-      x: f.x,
-      y: f.y,
-      angle: f.angle,
-      radius: f.range + f.level * 5,
-      color: f.color,
-      life: 0.22,
-      maxLife: 0.22,
-      isSkill: false
-    });
-    for (let i = 0; i < entities.length; i++) {
-      const t = entities[i];
-      if (t !== f && t.state !== 'Death') {
-        const dist = Math.hypot(t.x - f.x, t.y - f.y);
-        if (dist <= f.range + f.level * 5) {
-          dealDamage(f, t, f.dmg + f.level * 4);
-        }
-      }
-    }
-  } else {
-    projectiles.push({
-      owner: f,
-      x: f.x,
-      y: f.y,
-      vx: Math.cos(f.angle) * 10.5,
-      vy: Math.sin(f.angle) * 10.5,
-      dmg: f.dmg + f.level * 4,
-      color: f.color,
-      life: 45,
-      r: 9
-    });
-  }
-}
-
-function triggerSkill(f) {
-  if (f.skillCd > 0 || f.state === 'Death') return;
-  f.skillCd = 3.2;
-  setState(f, 'Skill', 0.35);
-
-  if (f.type === 'melee') {
-    f.x += Math.cos(f.angle) * 80;
-    f.y += Math.sin(f.angle) * 80;
-    slashes.push({
-      x: f.x,
-      y: f.y,
-      angle: f.angle,
-      radius: 125 + f.level * 4,
-      color: '#facc15',
-      life: 0.35,
-      maxLife: 0.35,
-      isSkill: true
-    });
-    addParticle(f.x, f.y, f.color, 95, 0.35);
-    for (let i = 0; i < entities.length; i++) {
-      const t = entities[i];
-      if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 125 + f.level * 4) {
-        dealDamage(f, t, (f.dmg + f.level * 5) * 1.7);
-      }
-    }
-  } else {
-    addParticle(f.x, f.y, '#38bdf8', 55, 0.25);
-    for (let i = -2; i <= 2; i++) {
-      const a = f.angle + i * 0.16;
-      projectiles.push({
-        owner: f,
-        x: f.x,
-        y: f.y,
-        vx: Math.cos(a) * 11,
-        vy: Math.sin(a) * 11,
-        dmg: (f.dmg + f.level * 4) * 0.9,
-        color: '#facc15',
-        life: 48,
-        r: 11
-      });
-    }
-  }
-}
-
-function triggerDash(f) {
-  if (f.dashCd > 0 || f.state === 'Death') return;
-  f.dashCd = 1.8;
-  setState(f, 'Dash', 0.2);
-  f.x += Math.cos(f.angle) * 120;
-  f.y += Math.sin(f.angle) * 120;
-  addParticle(f.x, f.y, '#38bdf8', 40, 0.25);
-}
-
-function dealDamage(attacker, target, amount) {
-  if (target.state === 'Dash' || target.state === 'Death') return;
-  target.hp -= amount;
-  setState(target, 'Hit', 0.18);
-  addParticle(target.x, target.y - 18, '#ef4444', 22, 0.22);
-
-  if (target.hp <= 0) {
-    target.hp = 0;
-    target.state = 'Death';
-    attacker.kills++;
-    gainXp(attacker, 55 + target.level * 18);
-    attacker.hp = Math.min(attacker.maxHp, attacker.hp + attacker.maxHp * 0.25);
-  }
-}
-
-function gainXp(f, amount) {
-  f.xp += amount;
-  while (f.xp >= f.nextXp) {
-    f.xp -= f.nextXp;
-    f.level++;
-    f.nextXp = Math.round(f.nextXp * 1.35);
-    f.maxHp += 65;
-    f.hp = f.maxHp;
-    addParticle(f.x, f.y, '#facc15', 55, 0.4);
-  }
-}
-
-function addParticle(x, y, color, radius, life) {
-  particles.push({
-    x: x,
-    y: y,
-    color: color,
-    radius: radius,
-    life: life,
-    maxLife: life
-  });
-}
-
-function update(dt) {
-  for (let idx = 0; idx < entities.length; idx++) {
-    const f = entities[idx];
-    f.animTick += dt * 8;
-    if (f.atkCd > 0) f.atkCd -= dt;
-    if (f.skillCd > 0) f.skillCd -= dt;
-    if (f.dashCd > 0) f.dashCd -= dt;
-    if (f.magnetTimer > 0) f.magnetTimer -= dt;
-    if (f.speedTimer > 0) f.speedTimer -= dt;
-
-    if (f.state === 'Death') {
-      f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8);
-      continue;
+        this.skills = { spin: false, magnet: false, lifesteal: false };
+        
+        this.aiTimer = 0;
+        this.aiDirX = 0;
+        this.aiDirY = 0;
     }
 
-    if (f.stateTimer > 0) {
-      f.stateTimer -= dt;
-      if (f.stateTimer <= 0) {
-        f.state = 'Idle';
-      }
-    }
+    update() {
+        if (this.dead) return;
 
-    let moveX = 0;
-    let moveY = 0;
-    if (f.isPlayer) {
-      if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
-      if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
-      if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
-      if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
-      f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
-    } else {
-      let nearestEnemy = null;
-      let minEDist = 380;
-      for (let j = 0; j < entities.length; j++) {
-        const other = entities[j];
-        if (other !== f && other.state !== 'Death') {
-          const d = Math.hypot(other.x - f.x, other.y - f.y);
-          if (d < minEDist) {
-            minEDist = d;
-            nearestEnemy = other;
-          }
-        }
-      }
-      if (nearestEnemy) {
-        f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
-        if (minEDist > f.range * 0.85) {
-          moveX = Math.cos(f.angle);
-          moveY = Math.sin(f.angle);
+        if (this.stamina < this.maxStamina) this.stamina = Math.min(this.maxStamina, this.stamina + 0.35);
+        if (this.attackAnim > 0) this.attackAnim -= 0.12;
+
+        let moveX = 0, moveY = 0;
+
+        if (this.isPlayer) {
+            moveX = joystick.dx;
+            moveY = joystick.dy;
         } else {
-          triggerAttack(f);
-          if (Math.random() < 0.025) triggerSkill(f);
-          if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
+            this.updateAI();
+            moveX = this.aiDirX;
+            moveY = this.aiDirY;
         }
-      } else {
-        let nearestMush = null;
-        let minMDist = 9999;
-        for (let m = 0; m < mushrooms.length; m++) {
-          const d = Math.hypot(mushrooms[m].x - f.x, mushrooms[m].y - f.y);
-          if (d < minMDist) {
-            minMDist = d;
-            nearestMush = mushrooms[m];
-          }
-        }
-        if (nearestMush) {
-          f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
-          moveX = Math.cos(f.angle);
-          moveY = Math.sin(f.angle);
-        }
-      }
-    }
 
-    if (moveX !== 0 || moveY !== 0) {
-      if (Math.abs(moveX) > Math.abs(moveY)) {
-        f.dir = moveX < 0 ? 'left' : 'right';
-        f.facing = moveX < 0 ? -1 : 1;
-      } else {
-        f.dir = moveY < 0 ? 'up' : 'down';
-      }
-
-      const len = Math.hypot(moveX, moveY);
-      const curSpd = f.spd * (f.speedTimer > 0 ? 1.55 : 1);
-      f.x += (moveX / len) * curSpd;
-      f.y += (moveY / len) * curSpd;
-
-      if (f.speedTimer > 0 && Math.random() < 0.4) {
-        addParticle(f.x, f.y + 15, '#38bdf8', 10, 0.18);
-      }
-      if (f.state === 'Idle') {
-        f.state = 'Walk';
-      }
-    } else if (f.state === 'Walk') {
-      f.state = 'Idle';
-    }
-
-    f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
-    f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
-
-    for (let o = 0; o < obstacles.length; o++) {
-      const obs = obstacles[o];
-      const dx = f.x - obs.x;
-      const dy = f.y - obs.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < obs.r + 22 && dist > 0) {
-        f.x = obs.x + (dx / dist) * (obs.r + 22);
-        f.y = obs.y + (dy / dist) * (obs.r + 22);
-      }
-    }
-
-    const pickupRange = f.magnetTimer > 0 ? 240 : 38;
-    for (let i = mushrooms.length - 1; i >= 0; i--) {
-      const m = mushrooms[i];
-      const d = Math.hypot(f.x - m.x, f.y - m.y);
-      if (d < pickupRange) {
-        if (d > 34 && f.magnetTimer > 0) {
-          m.x += ((f.x - m.x) / d) * 9;
-          m.y += ((f.y - m.y) / d) * 9;
+        if (this.dashTime > 0) {
+            this.dashTime--;
+            this.x += Math.cos(this.angle) * (this.speed * 2.8);
+            this.y += Math.sin(this.angle) * (this.speed * 2.8);
+            if (this.dashTime === 0) this.attack();
         } else {
-          gainXp(f, m.xp);
-          mushrooms.splice(i, 1);
-          spawnMushroom();
+            if (moveX !== 0 || moveY !== 0) {
+                this.angle = Math.atan2(moveY, moveX);
+                this.x += moveX * this.speed;
+                this.y += moveY * this.speed;
+            }
         }
-      }
+
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= 0.85;
+        this.vy *= 0.85;
+
+        this.x = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.x));
+        this.y = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.y));
     }
 
-    for (let i = items.length - 1; i >= 0; i--) {
-      const it = items[i];
-      if (Math.hypot(f.x - it.x, f.y - it.y) < 42) {
-        if (it.kind === 'magnet') {
-          f.magnetTimer = 8.0;
-          addParticle(f.x, f.y, '#c084fc', 42, 0.3);
-        } else if (it.kind === 'boots') {
-          f.speedTimer = 7.0;
-          addParticle(f.x, f.y, '#38bdf8', 42, 0.3);
-        } else if (it.kind === 'heal') {
-          f.hp = Math.min(f.maxHp, f.hp + f.maxHp * 0.35);
-          addParticle(f.x, f.y, '#22c55e', 42, 0.3);
+    updateAI() {
+        this.aiTimer--;
+        let nearestEnemy = null;
+        let minDist = 350;
+
+        fighters.forEach(f => {
+            if (f !== this && !f.dead) {
+                const d = Math.hypot(f.x - this.x, f.y - this.y);
+                if (d < minDist) { minDist = d; nearestEnemy = f; }
+            }
+        });
+
+        if (nearestEnemy) {
+            const ang = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+            this.aiDirX = Math.cos(ang);
+            this.aiDirY = Math.sin(ang);
+            if (minDist < this.attackRange + this.radius && Math.random() < 0.08) {
+                this.attack();
+            }
+        } else if (this.aiTimer <= 0) {
+            this.aiTimer = 40 + Math.random() * 60;
+            const randAng = Math.random() * Math.PI * 2;
+            this.aiDirX = Math.cos(randAng);
+            this.aiDirY = Math.sin(randAng);
         }
-        items.splice(i, 1);
-        spawnItem();
-      }
     }
-  }
 
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    const p = projectiles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-    let hit = false;
-    for (let j = 0; j < entities.length; j++) {
-      const t = entities[j];
-      if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 30) {
-        dealDamage(p.owner, t, p.dmg);
-        hit = true;
-      }
+    attack() {
+        if (this.dead || this.attackAnim > 0.2) return;
+        this.attackAnim = 1.0;
+
+        const range = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
+
+        fighters.forEach(target => {
+            if (target === this || target.dead) return;
+            const dx = target.x - this.x;
+            const dy = target.y - this.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist <= range + target.radius) {
+                const angleToTarget = Math.atan2(dy, dx);
+                let angleDiff = Math.abs(angleToTarget - this.angle);
+                if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+
+                if (this.skills.spin || angleDiff < Math.PI / 2.2) {
+                    const knockForce = 18;
+                    target.takeDamage(this.damage, Math.cos(angleToTarget) * knockForce, Math.sin(angleToTarget) * knockForce, this);
+                    if (this.skills.lifesteal) {
+                        this.hp = Math.min(this.maxHp, this.hp + this.damage * 0.25);
+                    }
+                }
+            }
+        });
     }
-    if (hit || p.life <= 0) {
-      projectiles.splice(i, 1);
+
+    dash() {
+        if (this.dead || this.stamina < 35 || this.dashTime > 0) return;
+        this.stamina -= 35;
+        this.dashTime = 10;
     }
-  }
 
-  for (let i = slashes.length - 1; i >= 0; i--) {
-    slashes[i].life -= dt;
-    if (slashes[i].life <= 0) {
-      slashes.splice(i, 1);
+    takeDamage(dmg, kx, ky, attacker) {
+        this.hp -= dmg;
+        this.vx += kx;
+        this.vy += ky;
+
+        if (this.hp <= 0 && !this.dead) {
+            this.dead = true;
+            for (let i = 0; i < this.level * 5; i++) {
+                spawnMushroom(this.x + (Math.random() - 0.5) * 80, this.y + (Math.random() - 0.5) * 80, true);
+            }
+            if (this.isPlayer) {
+                document.getElementById('final-score').innerText = `Điểm đạt được: ${this.score} (Cấp ${this.level})`;
+                document.getElementById('gameover-screen').style.display = 'flex';
+            } else {
+                setTimeout(() => respawnBot(this), 3000);
+            }
+        }
     }
-  }
 
-  for (let i = particles.length - 1; i >= 0; i--) {
-    particles[i].life -= dt;
-    if (particles[i].life <= 0) {
-      particles.splice(i, 1);
+    addScore(pts) {
+        this.score += pts;
+        this.hp = Math.min(this.maxHp, this.hp + 3);
+        if (this.score >= this.nextLevelScore) {
+            this.level++;
+            this.nextLevelScore = Math.floor(this.nextLevelScore * 1.45);
+            this.radius = this.baseRadius + this.level * 2.5;
+            this.maxHp += 20;
+            this.hp = this.maxHp;
+            this.damage += 4;
+
+            if (this.isPlayer) {
+                showSkillChoices();
+            } else {
+                const randSkill = SKILLS_POOL[Math.floor(Math.random() * SKILLS_POOL.length)].id;
+                applySkill(this, randSkill);
+            }
+        }
     }
-  }
 
-  updateHUD();
-}
+    draw() {
+        if (this.dead) return;
 
-function updateHUD() {
-  const alive = entities.filter(function(e) { return e.state !== 'Death'; });
-  document.getElementById('player-title').innerText =
-    'Cấp ' + player.level + ' • ' + player.name + ' (' + Math.ceil(player.hp) + '/' + player.maxHp + ' HP)';
-  document.getElementById('hp-bar').style.width = ((player.hp / player.maxHp) * 100) + '%';
-  document.getElementById('xp-bar').style.width = ((player.xp / player.nextXp) * 100) + '%';
-  document.getElementById('alive-count').innerText = 'Còn sống: ' + alive.length + '/16 • Hạ gục: ' + player.kills;
+        if (this.attackAnim > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.attackAnim * 0.45})`;
+            ctx.beginPath();
+            const r = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
+            if (this.skills.spin) {
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+            } else {
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, r, this.angle - Math.PI / 2.2, this.angle + Math.PI / 2.2);
+            }
+            ctx.fill();
+            ctx.restore();
+        }
 
-  let buffHtml = '';
-  if (player.magnetTimer > 0) {
-    buffHtml += '<span class="buff-tag">🧲 Nam châm: ' + player.magnetTimer.toFixed(1) + 's</span>';
-  }
-  if (player.speedTimer > 0) {
-    buffHtml += '<span class="buff-tag">👟 Tăng tốc: ' + player.speedTimer.toFixed(1) + 's</span>';
-  }
-  document.getElementById('buff-tags').innerHTML = buffHtml;
-
-  const top5 = alive.slice().sort(function(a, b) {
-    return b.level - a.level || b.kills - a.kills;
-  }).slice(0, 5);
-  let lbHtml = '';
-  for (let i = 0; i < top5.length; i++) {
-    const e = top5[i];
-    lbHtml += '<div style="display:flex;justify-content:space-between;margin:2px 0;color:' + (e.isPlayer ? '#facc15' : '#e2e8f0') + '"><span>' + (i + 1) + '. ' + e.name + '</span><span>Lv.' + e.level + '</span></div>';
-  }
-  document.getElementById('lb-list').innerHTML = lbHtml;
-
-  if (player.state === 'Death' || alive.length === 1) {
-    gameRunning = false;
-    document.getElementById('game-over').style.display = 'flex';
-    document.getElementById('end-title').innerText = player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
-    document.getElementById('end-stats').innerText = 'Đạt Cấp ' + player.level + ' • Hạ gục ' + player.kills + ' đối thủ';
-  }
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const camX = player.x - canvas.width / 2;
-  const camY = player.y - canvas.height / 2;
-  ctx.save();
-  ctx.translate(-camX, -camY);
-
-  ctx.fillStyle = '#4d7c0f';
-  ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 2;
-  for (let x = 0; x <= MAP_SIZE; x += 100) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, MAP_SIZE);
-    ctx.stroke();
-  }
-  for (let y = 0; y <= MAP_SIZE; y += 100) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(MAP_SIZE, y);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-  const nowSec = performance.now() / 400;
-  for (let i = 0; i < mushrooms.length; i++) {
-    const m = mushrooms[i];
-    const bounce = Math.sin(nowSec + m.bob) * 2;
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.beginPath();
-    ctx.ellipse(m.x, m.y + 8, m.r, m.r * 0.45, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#fef3c7';
-    ctx.fillRect(m.x - m.r * 0.4, m.y - 2 + bounce, m.r * 0.8, 10);
-
-    ctx.fillStyle = m.capColor;
-    ctx.beginPath();
-    ctx.arc(m.x, m.y - 2 + bounce, m.r, Math.PI, 0);
-    ctx.ellipse(m.x, m.y - 2 + bounce, m.r, m.r * 0.35, 0, 0, Math.PI);
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-
-    ctx.fillStyle = m.spotColor;
-    ctx.beginPath();
-    ctx.arc(m.x - m.r * 0.4, m.y - m.r * 0.45 + bounce, m.r * 0.22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(m.x + m.r * 0.4, m.y - m.r * 0.45 + bounce, m.r * 0.22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(m.x, m.y - m.r * 0.7 + bounce, m.r * 0.25, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  for (let i = 0; i < items.length; i++) {
-    const it = items[i];
-    const floatY = Math.sin(nowSec * 1.2 + it.bob) * 4;
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(it.x, it.y + 14, 15, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = it.kind === 'magnet' ? '#a855f7' : (it.kind === 'boots' ? '#0284c7' : '#16a34a');
-    ctx.beginPath();
-    ctx.arc(it.x, it.y + floatY, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = '#facc15';
-    ctx.stroke();
-
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const icon = it.kind === 'magnet' ? '🧲' : (it.kind === 'boots' ? '👟' : '❤️');
-    ctx.fillText(icon, it.x, it.y + floatY + 1);
-  }
-
-  const renderList = [];
-  for (let i = 0; i < obstacles.length; i++) {
-    renderList.push({ kind: 'obs', y: obstacles[i].y, data: obstacles[i] });
-  }
-  for (let i = 0; i < entities.length; i++) {
-    renderList.push({ kind: 'fighter', y: entities[i].y, data: entities[i] });
-  }
-  renderList.sort(function(a, b) {
-    return a.y - b.y;
-  });
-
-  for (let i = 0; i < renderList.length; i++) {
-    const item = renderList[i];
-    if (item.kind === 'obs') {
-      const o = item.data;
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
-      ctx.beginPath();
-      ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2);
-      ctx.fill();
-      if (o.type === 'fire') {
-        ctx.fillStyle = '#facc15';
         ctx.beginPath();
-        ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
         ctx.fill();
-      }
-    } else {
-      drawFighter(item.data);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle + (this.attackAnim > 0 ? (0.5 - this.attackAnim) * 2 : 0));
+        ctx.fillStyle = '#bdc3c7';
+        ctx.fillRect(this.radius - 5, -5, 26, 10);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(this.radius + 14, -12, 10, 24);
+        ctx.restore();
+
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Lv.${this.level} ${this.name}`, this.x, this.y - this.radius - 16);
+
+        const barW = 44;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 12, barW, 6);
+        ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#e74c3c';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 12, barW * (this.hp / this.maxHp), 6);
     }
-  }
-
-  for (let i = 0; i < slashes.length; i++) {
-    const s = slashes[i];
-    const alpha = s.life / s.maxLife;
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.globalAlpha = alpha;
-    if (s.isSkill) {
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.arc(0, 0, s.radius * (1.1 - alpha * 0.3), 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(250, 204, 21, 0.25)';
-      ctx.fill();
-    } else {
-      ctx.rotate(s.angle);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 12;
-      ctx.beginPath();
-      ctx.arc(0, 0, s.radius, -1.1, 1.1);
-      ctx.stroke();
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(0, 0, s.radius - 6, -1.0, 1.0);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  for (let i = 0; i < projectiles.length; i++) {
-    const p = projectiles[i];
-    ctx.save();
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * 0.45, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  for (let i = 0; i < particles.length; i++) {
-    const pt = particles[i];
-    ctx.globalAlpha = pt.life / pt.maxLife;
-    ctx.fillStyle = pt.color;
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  ctx.restore();
 }
 
-function drawFighter(f) {
-  if (f.deathAlpha <= 0) return;
-  ctx.save();
-  ctx.globalAlpha = f.deathAlpha;
-  ctx.translate(f.x, f.y);
+let mushrooms = [];
+let fighters = [];
+const player = new Fighter('Bộ Bộ (Bạn)', MAP_SIZE / 2, MAP_SIZE / 2, '#f1c40f', true);
+fighters.push(player);
 
-  if (f.magnetTimer > 0) {
-    ctx.strokeStyle = 'rgba(192, 132, 252, 0.45)';
+const BOT_NAMES = ['Lạc Lạc', 'Mu Mu', 'Nện Nện', 'Bóng Bóng', 'Ka Ka', 'Tù Trưởng', 'Thổ Dân', 'Sói Hoang', 'Gấu Đen', 'Báo Đốm'];
+const BOT_COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#e67e22', '#ff7979', '#badc58', '#686de0'];
+
+for (let i = 0; i < BOT_COUNT; i++) {
+    fighters.push(new Fighter(
+        BOT_NAMES[i % BOT_NAMES.length],
+        Math.random() * MAP_SIZE,
+        Math.random() * MAP_SIZE,
+        BOT_COLORS[i % BOT_COLORS.length]
+    ));
+}
+
+function respawnBot(bot) {
+    bot.x = Math.random() * MAP_SIZE;
+    bot.y = Math.random() * MAP_SIZE;
+    bot.hp = bot.maxHp;
+    bot.dead = false;
+}
+
+function spawnMushroom(x = Math.random() * MAP_SIZE, y = Math.random() * MAP_SIZE, isBig = false) {
+    mushrooms.push({
+        x: Math.max(20, Math.min(MAP_SIZE - 20, x)),
+        y: Math.max(20, Math.min(MAP_SIZE - 20, y)),
+        value: isBig ? 20 : 10,
+        radius: isBig ? 9 : 6,
+        color: isBig ? '#ff9ff3' : ['#ff6b6b', '#48dbfb', '#1dd1a1', '#feca57'][Math.floor(Math.random() * 4)]
+    });
+}
+
+for (let i = 0; i < MUSHROOM_COUNT; i++) spawnMushroom();
+
+function showSkillChoices() {
+    const modal = document.getElementById('skill-modal');
+    modal.innerHTML = '';
+    const shuffled = [...SKILLS_POOL].sort(() => 0.5 - Math.random()).slice(0, 3);
+    
+    shuffled.forEach(skill => {
+        const btn = document.createElement('button');
+        btn.className = 'skill-btn';
+        btn.innerHTML = `${skill.name}<br><small style="font-weight:normal">${skill.desc}</small>`;
+        btn.onclick = () => {
+            applySkill(player, skill.id);
+            modal.style.display = 'none';
+        };
+        modal.appendChild(btn);
+    });
+    modal.style.display = 'flex';
+}
+
+function applySkill(fighter, skillId) {
+    if (skillId === 'spin') fighter.skills.spin = true;
+    if (skillId === 'magnet') fighter.skills.magnet = true;
+    if (skillId === 'lifesteal') fighter.skills.lifesteal = true;
+    if (skillId === 'speed') fighter.speed *= 1.2;
+    if (skillId === 'damage') fighter.damage *= 1.25;
+}
+
+canvas.addEventListener('touchstart', e => {
+    for (let t of e.changedTouches) {
+        if (t.clientX < width / 2 && !joystick.active) {
+            joystick.active = true;
+            joystick.touchId = t.identifier;
+            joystick.startX = joystick.currX = t.clientX;
+            joystick.startY = joystick.currY = t.clientY;
+        }
+    }
+});
+
+canvas.addEventListener('touchmove', e => {
+    for (let t of e.changedTouches) {
+        if (joystick.active && t.identifier === joystick.touchId) {
+            joystick.currX = t.clientX;
+            joystick.currY = t.clientY;
+            const dx = joystick.currX - joystick.startX;
+            const dy = joystick.currY - joystick.startY;
+            const dist = Math.hypot(dx, dy);
+            const maxR = 45;
+            if (dist > 0) {
+                joystick.dx = (dx / dist) * Math.min(dist / maxR, 1);
+                joystick.dy = (dy / dist) * Math.min(dist / maxR, 1);
+            }
+        }
+    }
+});
+
+canvas.addEventListener('touchend', e => {
+    for (let t of e.changedTouches) {
+        if (t.identifier === joystick.touchId) {
+            joystick.active = false;
+            joystick.dx = joystick.dy = 0;
+        }
+    }
+});
+
+document.getElementById('btn-attack').addEventListener('touchstart', e => { e.preventDefault(); player.attack(); });
+document.getElementById('btn-attack').addEventListener('mousedown', () => player.attack());
+document.getElementById('btn-dash').addEventListener('touchstart', e => { e.preventDefault(); player.dash(); });
+document.getElementById('btn-dash').addEventListener('mousedown', () => player.dash());
+
+const keys = {};
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'KeyJ' || e.code === 'Enter') player.attack();
+    if (e.code === 'Space') player.dash();
+    updateKeyJoystick();
+});
+window.addEventListener('keyup', e => {
+    keys[e.code] = false;
+    updateKeyJoystick();
+});
+function updateKeyJoystick() {
+    let x = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
+    let y = (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) - (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0);
+    const len = Math.hypot(x, y);
+    joystick.dx = len > 0 ? x / len : 0;
+    joystick.dy = len > 0 ? y / len : 0;
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, width, height);
+
+    const camX = player.x - width / 2;
+    const camY = player.y - height / 2;
+
+    ctx.save();
+    ctx.translate(-camX, -camY);
+
+    ctx.fillStyle = '#4cd137';
+    ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, 55 + Math.sin(f.animTick * 2) * 6, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+    for (let x = 0; x <= MAP_SIZE; x += 100) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
+    }
+    for (let y = 0; y <= MAP_SIZE; y += 100) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#c23616';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.ellipse(0, 24, 24, 11, 0, 0, Math.PI * 2);
-  ctx.fill();
+    for (let i = mushrooms.length - 1; i >= 0; i--) {
+        const m = mushrooms[i];
+        
+        let eaten = false;
+        for (let f of fighters) {
+            if (f.dead) continue;
+            const d = Math.hypot(f.x - m.x, f.y - m.y);
+            if (f.skills.magnet && d < 180) {
+                m.x += (f.x - m.x) * 0.12;
+                m.y += (f.y - m.y) * 0.12;
+            }
+            if (d < f.radius + m.radius) {
+                f.addScore(m.value);
+                eaten = true;
+                break;
+            }
+        }
 
-  ctx.fillStyle = f.isPlayer ? '#facc15' : '#fff';
-  ctx.beginPath();
-  if (f.dir === 'up') {
-    ctx.moveTo(0, -48);
-    ctx.lineTo(-7, -39);
-    ctx.lineTo(7, -39);
-  } else if (f.dir === 'down') {
-    ctx.moveTo(0, 38);
-    ctx.lineTo(-7, 29);
-    ctx.lineTo(7, 29);
-  } else if (f.dir === 'left') {
-    ctx.moveTo(-38, 0);
-    ctx.lineTo(-29, -7);
-    ctx.lineTo(-29, 7);
-  } else {
-    ctx.moveTo(38, 0);
-    ctx.lineTo(29, -7);
-    ctx.lineTo(29, 7);
-  }
-  ctx.fill();
+        if (eaten) {
+            mushrooms.splice(i, 1);
+            if (mushrooms.length < MUSHROOM_COUNT) spawnMushroom();
+            continue;
+        }
 
-  let scaleX = f.facing;
-  let scaleY = 1;
-  let rot = 0;
-  let offsetY = 0;
-  if (f.dir === 'up') scaleY = 0.94;
-  if (f.state === 'Idle') {
-    scaleY *= 1 + Math.sin(f.animTick * 0.5) * 0.04;
-  } else if (f.state === 'Walk') {
-    offsetY = -Math.abs(Math.sin(f.animTick * 1.5)) * 8;
-    rot = Math.sin(f.animTick * 1.5) * 0.09;
-  } else if (f.state === 'Attack') {
-    rot = f.facing * 0.28;
-    scaleX = f.facing * 1.16;
-  } else if (f.state === 'Skill') {
-    scaleX = f.facing * 1.28;
-    scaleY = 1.28;
-  } else if (f.state === 'Hit') {
-    offsetY = -5;
-    rot = -f.facing * 0.2;
-  } else if (f.state === 'Dash') {
-    scaleX = f.facing * 1.3;
-    scaleY = 0.8;
-  } else if (f.state === 'Death') {
-    rot = f.facing * (Math.PI / 2);
-    offsetY = 14;
-  }
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+        ctx.fillStyle = m.color;
+        ctx.fill();
+    }
 
-  ctx.save();
-  ctx.translate(0, offsetY);
-  ctx.rotate(rot);
-  ctx.scale(scaleX, scaleY);
+    fighters.forEach(f => { f.update(); f.draw(); });
 
-  const size = 62 + f.level * 2;
-  if (charSprites[f.id]) {
-    ctx.drawImage(charSprites[f.id], -size / 2, -size / 2, size, size);
-  }
-  if (f.state === 'Hit') {
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
-    ctx.beginPath();
-    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+    ctx.restore();
 
-  if (f.state !== 'Death') {
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(-28, -56, 56, 7);
-    ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
-    ctx.fillRect(-27, -55, 54 * (f.hp / f.maxHp), 5);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Lv.' + f.level + ' ' + f.name, 0, -61);
-  }
+    if (joystick.active) {
+        ctx.beginPath();
+        ctx.arc(joystick.startX, joystick.startY, 45, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
 
-  ctx.restore();
+        ctx.beginPath();
+        ctx.arc(joystick.startX + joystick.dx * 45, joystick.startY + joystick.dy * 45, 20, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fill();
+    }
+
+    document.getElementById('ui-level').innerText = player.level;
+    document.getElementById('ui-score').innerText = player.score;
+
+    const topFighters = [...fighters].filter(f => !f.dead).sort((a, b) => b.score - a.score).slice(0, 5);
+    document.getElementById('lb-list').innerHTML = topFighters
+        .map((f, idx) => `<div>${idx + 1}. ${f.name}: <b>${f.score}</b></div>`).join('');
+
+    requestAnimationFrame(gameLoop);
 }
 
-function gameLoop(now) {
-  if (!gameRunning) return;
-  const dt = Math.min(0.05, (now - lastTime) / 1000);
-  lastTime = now;
-  update(dt);
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-document.getElementById('start-btn').onclick = initArena;
-document.getElementById('restart-btn').onclick = initArena;
+gameLoop();
 </script>
 </body>
 </html>
