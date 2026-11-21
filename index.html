@@ -1,1 +1,277 @@
 
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLAYZONE - Neon Gaming</title>
+<style>
+:root{--bg:#080b16;--panel:#11182a;--panel2:#19233a;--cyan:#35d9ff;--purple:#a855f7;--text:#f4f7ff;--muted:#929db5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
+header{padding:22px 6%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #25304a;background:#0b1020;position:sticky;top:0;z-index:5}
+.logo{font-size:27px;font-weight:900;letter-spacing:2px;color:var(--cyan);text-shadow:0 0 15px #35d9ff80}
+.logo span{color:white}
+button,input{font:inherit}
+button{cursor:pointer}
+.lang{background:var(--panel2);border:1px solid #35415c;color:white;border-radius:9px;padding:10px 15px}
+.hero{text-align:center;padding:65px 15px 40px;background:radial-gradient(ellipse at top,#172b50 0%,#080b16 65%)}
+.hero h1{font-size:clamp(36px,7vw,65px);margin:0 0 15px;font-weight:900}
+.hero h1 span{color:var(--cyan);text-shadow:0 0 25px #35d9ff80}
+.hero p{color:var(--muted);font-size:16px}
+.search{width:min(500px,90%);padding:15px 18px;margin-top:20px;border-radius:12px;border:1px solid #35415c;background:#11182a;color:white;outline:none}
+main{max-width:1200px;margin:auto;padding:20px 22px 70px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:25px 0}
+.section-title h2{font-size:23px}
+.count{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:17px}
+.game-card{background:linear-gradient(145deg,#17223a,#101626);border:1px solid #273653;border-radius:16px;padding:22px;min-height:165px;transition:.2s;cursor:pointer}
+.game-card:hover{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 8px 30px #35d9ff20}
+.emoji{font-size:36px;margin-bottom:14px}
+.game-card h3{margin:0 0 8px;font-size:17px}
+.game-card p{color:var(--muted);font-size:13px;margin:0}
+.play{display:inline-block;margin-top:17px;color:var(--cyan);font-size:13px;font-weight:bold}
+footer{text-align:center;color:var(--muted);padding:30px;border-top:1px solid #25304a}
+.modal{display:none;position:fixed;inset:0;background:#030611ed;z-index:10;overflow:auto;padding:20px}
+.modal.show{display:flex;align-items:center;justify-content:center}
+.dialog{width:min(700px,100%);background:#11182a;border:1px solid #34425f;border-radius:18px;padding:25px;position:relative;min-height:350px}
+.close{position:absolute;right:17px;top:15px;background:#27334b;border:0;color:white;border-radius:8px;padding:9px 13px}
+#gameTitle{font-size:24px;margin:0 70px 10px 0}
+#gameArea{text-align:center;padding:22px 5px;min-height:220px}
+.action{background:linear-gradient(100deg,#168cbd,#8046d5);border:0;color:white;padding:11px 18px;border-radius:9px;margin:5px;font-weight:bold}
+.secondary{background:#26334d;border:1px solid #465574;color:white;padding:10px 15px;border-radius:9px;margin:5px}
+.game-input{background:#080e1c;border:1px solid #42516e;color:white;padding:12px;border-radius:8px;width:min(250px,90%);margin:8px}
+.board{display:grid;gap:6px;justify-content:center;margin:15px auto}
+.cell{width:62px;height:62px;background:#202e49;border:1px solid #3a4b69;border-radius:9px;color:white;font-size:25px;font-weight:bold}
+.cell:hover{border-color:var(--cyan)}
+.big{font-size:35px;font-weight:bold;margin:15px}
+.info{color:var(--muted);margin:12px}
+canvas{background:#050a16;border:1px solid #35415c;border-radius:10px;max-width:100%}
+@media(max-width:600px){header{padding:15px}.logo{font-size:21px}.hero{padding-top:45px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.game-card{padding:15px;min-height:155px}.cell{width:48px;height:48px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">PLAY<span>ZONE</span> ⚡</div>
+ <button class="lang" id="langBtn">🇻🇳 Tiếng Việt</button>
+</header>
+<section class="hero">
+ <h1 id="heroTitle">ENTER THE <span>GAME ZONE</span></h1>
+ <p id="heroDesc">Your world. Your games. Your rules.</p>
+ <input class="search" id="search" placeholder="🔍 Tìm kiếm trò chơi...">
+</section>
+<main>
+ <div class="section-title"><h2 id="listTitle">🎮 Khám phá trò chơi</h2><span class="count">16 GAMES</span></div>
+ <div class="grid" id="gameGrid"></div>
+</main>
+<footer>© 2026 PLAYZONE · PLAY MORE. HAVE FUN.</footer>
+<div class="modal" id="modal">
+ <div class="dialog">
+  <button class="close" id="closeBtn">✕</button>
+  <h2 id="gameTitle"></h2>
+  <div id="gameArea"></div>
+ </div>
+</div>
+<script>
+const games=[
+ ["🐍","Snake","Rắn săn mồi","Snake Game"],
+ ["⭕","Tic Tac Toe","Cờ caro 3x3","Tic Tac Toe"],
+ ["🔢","2048","Ghép số đến 2048","2048 Puzzle"],
+ ["🧠","Memory Match","Lật thẻ ghi nhớ","Memory Match"],
+ ["💣","Minesweeper","Dò mìn","Minesweeper"],
+ ["🧱","Brick Breaker","Phá gạch","Brick Breaker"],
+ ["🏓","Pong","Bóng bàn arcade","Pong"],
+ ["✊","Rock Paper Scissors","Kéo búa bao","Rock Paper Scissors"],
+ ["🎯","Guess Number","Đoán số bí mật","Guess the Number"],
+ ["🐹","Whack-a-Mole","Đập chuột","Whack-a-Mole"],
+ ["🎵","Simon Says","Ghi nhớ màu sắc","Simon Says"],
+ ["🔤","Hangman","Đoán từ tiếng Anh","Hangman"],
+ ["⌨️","Typing Speed","Thử tốc độ gõ","Typing Speed"],
+ ["⚡","Reaction Test","Kiểm tra phản xạ","Reaction Test"],
+ ["➗","Math Challenge","Thử thách toán học","Math Challenge"],
+ ["🔴","Connect Four","Cờ kết nối bốn","Connect Four"]
+];
+let english=false;
+const grid=document.getElementById("gameGrid");
+const search=document.getElementById("search");
+function drawGrid(){
+ grid.innerHTML="";
+ games.forEach((g,i)=>{
+  let name=english?g[3]:g[1],desc=english?g[3]:g[2];
+  if(!(name+" "+desc).toLowerCase().includes(search.value.toLowerCase()))return;
+  let card=document.createElement("div");card.className="game-card";
+  card.innerHTML=`<div class="emoji">${g[0]}</div><h3>${name}</h3><p>${desc}</p><span class="play">${english?"▶ PLAY NOW":"▶ CHƠI NGAY"}</span>`;
+  card.onclick=()=>openGame(i);grid.appendChild(card);
+ });
+}
+search.oninput=drawGrid;
+document.getElementById("langBtn").onclick=()=>{
+ english=!english;
+ document.getElementById("langBtn").textContent=english?"🇬🇧 English":"🇻🇳 Tiếng Việt";
+ document.getElementById("heroTitle").innerHTML=english?'ENTER THE <span>GAME ZONE</span>':'BƯỚC VÀO <span>THẾ GIỚI GAME</span>';
+ document.getElementById("heroDesc").textContent=english?"Your world. Your games. Your rules.":"Thế giới của bạn. Trò chơi của bạn.";
+ document.getElementById("listTitle").textContent=english?"🎮 Explore Games":"🎮 Khám phá trò chơi";
+ search.placeholder=english?"🔍 Search games...":"🔍 Tìm kiếm trò chơi...";
+ drawGrid();
+};
+const area=document.getElementById("gameArea");
+const modal=document.getElementById("modal");
+document.getElementById("closeBtn").onclick=()=>{modal.classList.remove("show");stopGame()};
+let cleanup=()=>{};
+function stopGame(){cleanup();cleanup=()=>{}}
+function openGame(i){
+ stopGame();modal.classList.add("show");
+ document.getElementById("gameTitle").textContent=games[i][0]+" "+(english?games[i][3]:games[i][1]);
+ area.innerHTML="";
+ const el=(tag,cls,txt,parent=area)=>{let x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=txt;parent.appendChild(x);return x};
+ const btn=(txt,fn)=>{let b=el("button","action",txt);b.onclick=fn;return b};
+ const info=txt=>el("div","info",txt);
+ const board=(n)=>{let b=el("div","board");b.style.gridTemplateColumns=`repeat(${n},auto)`;return b};
+ const cell=(b,txt,fn)=>{let c=el("button","cell",txt,b);c.onclick=fn;return c};
+ const input=(placeholder)=>{let x=el("input","game-input");x.placeholder=placeholder;return x};
+ const say=txt=>{status.textContent=txt};
+ let status=info(english?"Good luck!":"Chúc bạn chơi vui!");
+ const again=()=>openGame(i);
+
+ // 1 SNAKE
+ if(i===0){
+  let c=el("canvas");c.width=400;c.height=400;let ctx=c.getContext("2d");
+  let snake=[{x:8,y:8}],food={x:13,y:10},dir={x:1,y:0},score=0,alive=true;
+  function draw(){
+   ctx.fillStyle="#080e1c";ctx.fillRect(0,0,400,400);
+   ctx.fillStyle="#35d9ff";snake.forEach(p=>ctx.fillRect(p.x*20,p.y*20,18,18));
+   ctx.fillStyle="#f05";ctx.fillRect(food.x*20,food.y*20,18,18);
+   let h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+   if(h.x<0||h.x>=20||h.y<0||h.y>=20||snake.some(p=>p.x===h.x&&p.y===h.y)){alive=false;clearInterval(timer);say("Game Over! Score: "+score);return}
+   snake.unshift(h);
+   if(h.x===food.x&&h.y===food.y){score++;food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};say("Score: "+score)}else snake.pop();
+  }
+  let timer=setInterval(draw,140);
+  const key=e=>{let d={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(d&&!(d[0]===-dir.x&&d[1]===-dir.y))dir={x:d[0],y:d[1]}};
+  window.addEventListener("keydown",key);cleanup=()=>{clearInterval(timer);window.removeEventListener("keydown",key)};
+  info(english?"Use arrow keys to move.":"Dùng phím mũi tên để di chuyển.");
+  btn("↻ Restart",again);
+ }
+ // 2 TIC TAC TOE
+ if(i===1){
+  let a=Array(9).fill(""),turn="X",done=false,b=board(3);
+  function check(){let wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+   let w=wins.find(x=>a[x[0]]&&a[x[0]]===a[x[1]]&&a[x[1]]===a[x[2]]);
+   if(w){done=true;say(w[0]&&false?"":"Winner: "+a[w[0]])}else if(a.every(Boolean)){done=true;say("Draw!")}else turn=turn==="X"?"O":"X";
+  }
+  a.forEach((v,j)=>cell(b,"",()=>{if(done||a[j])return;a[j]=turn;b.children[j].textContent=turn;check()}));
+  btn("↻ Restart",again);
+ }
+ // 3 2048
+ if(i===2){
+  let a=Array(16).fill(0);a[Math.floor(Math.random()*16)]=2;
+  function spawn(){let z=a.map((v,j)=>v? -1:j).filter(v=>v>=0);if(z.length)a[z[Math.floor(Math.random()*z.length)]]=Math.random()<.9?2:4}
+  function render(){area.querySelector(".board")?.remove();let b=board(4);a.forEach(v=>cell(b,v||"",()=>{}).style.background=v?"#315a83":"#202e49")}
+  function move(d){let old=a.join();for(let k=0;k<4;k++){let ids=Array.from({length:4},(_,j)=>d===0?k*4+j:d===1?k*4+3-j:d===2?j*4+k:(3-j)*4+k);let vals=ids.map(x=>a[x]).filter(Boolean),out=[];for(let j=0;j<vals.length;j++){if(vals[j]===vals[j+1]){out.push(vals[j]*2);j++}else out.push(vals[j])}ids.forEach((id,j)=>a[id]=out[j]||0)}if(old!==a.join())spawn();render()}
+  const key=e=>{let d={ArrowLeft:0,ArrowRight:1,ArrowUp:2,ArrowDown:3}[e.key];if(d!==undefined){e.preventDefault();move(d)}};
+  window.addEventListener("keydown",key);cleanup=()=>window.removeEventListener("keydown",key);
+  spawn();render();info("Dùng phím mũi tên để ghép các ô số.");btn("↻ Restart",again);
+ }
+ // 4 MEMORY
+ if(i===3){
+  let vals=[1,2,3,4,5,6,1,2,3,4,5,6].sort(()=>Math.random()-.5),opened=[],matched=[];
+  let b=board(4);
+  vals.forEach((v,j)=>cell(b,"❔",function(){
+   if(opened.length===2||matched.includes(j)||opened.includes(j))return;
+   this.textContent=v;opened.push(j);
+   if(opened.length===2){if(vals[opened[0]]===vals[opened[1]]){matched.push(...opened);opened=[];say("Pairs: "+matched.length/2);if(matched.length===12)say("You win!")}else setTimeout(()=>{opened.forEach(k=>b.children[k].textContent="❔");opened=[]},700)}
+  }));
+  btn("↻ Restart",again);
+ }
+ // 5 MINESWEEPER
+ if(i===4){
+  let mines=new Set();while(mines.size<8)mines.add(Math.floor(Math.random()*64));
+  let opened=new Set(),b=board(8);
+  for(let j=0;j<64;j++)cell(b,"",function(){
+   if(opened.has(j))return;opened.add(j);
+   if(mines.has(j)){this.textContent="💣";say("Game Over!");b.querySelectorAll("button").forEach((x,k)=>{if(mines.has(k))x.textContent="💣"});return}
+   let n=[j-9,j-8,j-7,j-1,j+1,j+7,j+8,j+9].filter(k=>k>=0&&k<64&&Math.abs(k%8-j%8)<=1&&mines.has(k)).length;
+   this.textContent=n||"·";this.style.background="#17634f";
+   if(opened.size===56)say("You win!");
+  });
+  btn("↻ Restart",again);
+ }
+ // 6 BRICK BREAKER
+ if(i===5){
+  let c=el("canvas");c.width=420;c.height=300;let x=210,y=260,dx=3,dy=-3,p=165,br=Array.from({length:30},(_,j)=>({x:8+(j%10)*41,y:15+Math.floor(j/10)*25,on:true})),run=true;
+  function draw(){let g=c.getContext("2d");g.fillStyle="#080e1c";g.fillRect(0,0,420,300);g.fillStyle="#35d9ff";br.forEach(q=>{if(q.on)g.fillRect(q.x,q.y,36,15)});g.fillRect(p,282,90,8);g.beginPath();g.arc(x,y,7,0,7);g.fill();x+=dx;y+=dy;if(x<7||x>413)dx=-dx;if(y<7)dy=-dy;if(y>275&&x>p&&x<p+90)dy=-Math.abs(dy);if(y>300){run=false;clearInterval(t);say("Game Over")}br.forEach(q=>{if(q.on&&x>q.x&&x<q.x+36&&y>q.y&&y<q.y+15){q.on=false;dy=-dy}});if(br.every(q=>!q.on)){run=false;clearInterval(t);say("You win!")}}
+  let t=setInterval(draw,20);const move=e=>{let r=c.getBoundingClientRect();p=Math.max(0,Math.min(330,e.clientX-r.left-45))};c.addEventListener("mousemove",move);cleanup=()=>{clearInterval(t);c.removeEventListener("mousemove",move)};
+  btn("↻ Restart",again);
+ }
+ // 7 PONG
+ if(i===6){
+  let c=el("canvas");c.width=420;c.height=280;let x=210,y=140,dx=3,dy=2,p=100,run=true;
+  function draw(){let g=c.getContext("2d");g.fillStyle="#080e1c";g.fillRect(0,0,420,280);g.fillStyle="#35d9ff";g.fillRect(10,p,10,70);g.fillRect(400,y-35,10,70);g.beginPath();g.arc(x,y,8,0,7);g.fill();x+=dx;y+=dy;if(y<8||y>272)dy=-dy;if(x<25&&y>p&&y<p+70)dx=Math.abs(dx);if(x>395&&y>y-35&&y<y+35)dx=-Math.abs(dx);if(x<0||x>420){run=false;clearInterval(t);say("Point scored! Restart to play.")}}
+  let t=setInterval(draw,20);const key=e=>{if(e.key==="ArrowUp")p=Math.max(0,p-20);if(e.key==="ArrowDown")p=Math.min(210,p+20)};window.addEventListener("keydown",key);cleanup=()=>{clearInterval(t);window.removeEventListener("keydown",key)};btn("↻ Restart",again);
+ }
+ // 8 ROCK PAPER SCISSORS
+ if(i===7){
+  let choices=["✊","✋","✌️"];
+  choices.forEach((v,j)=>btn(v,()=>{let k=Math.floor(Math.random()*3),r=j===k?"Draw":(j-k+3)%3===1?"You win!":"Computer wins!";say("You: "+v+" | Computer: "+choices[k]+" | "+r)}));
+ }
+ // 9 GUESS NUMBER
+ if(i===8){
+  let n=Math.ceil(Math.random()*100),tries=0,x=input("1 - 100");
+  btn("Guess",()=>{let v=Number(x.value);tries++;say(!v||v>100?"Enter a number from 1 to 100":v===n?"🎉 Correct! Attempts: "+tries:v<n?"Too low! Try higher.":"Too high! Try lower.")});
+  btn("↻ Restart",again);
+ }
+ // 10 WHACK A MOLE
+ if(i===9){
+  let score=0,left=20,b=board(3),active=-1;
+  let cells=[];
+  for(let j=0;j<9;j++)cells.push(cell(b,"🕳️",()=>{if(j===active){score++;say("Score: "+score);active=-1;render()} }));
+  function render(){cells.forEach((c,j)=>c.textContent=j===active?"🐹":"🕳️")}
+  function tick(){active=Math.floor(Math.random()*9);render();left--;if(left<=0){clearInterval(t);active=-1;render();say("Final score: "+score)}}
+  let t=setInterval(tick,750);cleanup=()=>clearInterval(t);btn("↻ Restart",again);
+ }
+ // 11 SIMON
+ if(i===10){
+  let seq=[],pos=0,colors=["🔴","🟢","🔵","🟡"],b=board(2),buttons=[];
+  function next(){seq.push(Math.floor(Math.random()*4));pos=0;say("Watch the sequence. Level "+seq.length);buttons.forEach((x,j)=>x.textContent=colors[j]);let k=0;let t=setInterval(()=>{buttons.forEach((x,j)=>x.style.opacity=j===seq[k]?".3":"1");k++;if(k>=seq.length){clearInterval(t);buttons.forEach(x=>x.style.opacity="1");say("Repeat the sequence!")}},650)}
+  colors.forEach((v,j)=>buttons.push(cell(b,v,()=>{if(seq[pos]!==j){say("Wrong! Game over.");return}pos++;if(pos===seq.length)next()})));
+  btn("Start",next);
+ }
+ // 12 HANGMAN
+ if(i===11){
+  let words=["APPLE","GAMING","COMPUTER","PLAYZONE","MONSTER"],word=words[Math.floor(Math.random()*words.length)],guessed=[],wrong=0;
+  let display=el("div","big");let result=el("div","info");
+  function update(){display.textContent=word.split("").map(x=>guessed.includes(x)?x:"_").join(" ");result.textContent="Wrong guesses: "+wrong+"/6";if(word.split("").every(x=>guessed.includes(x)))say("You win!");if(wrong>=6)say("Game over. Word: "+word)}
+  let b=board(7);[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].forEach(ch=>cell(b,ch,()=>{if(guessed.includes(ch)||wrong>=6)return;guessed.push(ch);if(!word.includes(ch))wrong++;update()}));update();btn("↻ Restart",again);
+ }
+ // 13 TYPING
+ if(i===12){
+  let words=["javascript","computer","quality","challenge","keyboard","awesome","playzone","internet","developer"],word=words[Math.floor(Math.random()*words.length)];
+  el("div","big",word);let x=input("Type the word above");let start=Date.now();
+  btn("Check",()=>{if(x.value===word)say("Correct! Time: "+((Date.now()-start)/1000).toFixed(2)+" seconds");else say("Not correct. Try again!")});
+ }
+ // 14 REACTION
+ if(i===13){
+  let waiting=false,started=0,timer;
+  let b=btn("Click to start",()=>{if(waiting){clearTimeout(timer);waiting=false;say("Too soon! Try again.");return}waiting=true;b.textContent="Wait for green...";timer=setTimeout(()=>{started=Date.now();b.textContent="CLICK NOW!";b.style.background="#16834c";waiting="ready"},1000+Math.random()*3000)});
+  b.onclick=()=>{if(waiting==="ready"){say("Your reaction: "+(Date.now()-started)+" ms");waiting=false;b.style.background="";b.textContent="Play again"}else if(!waiting){waiting=true;b.textContent="Wait for green...";timer=setTimeout(()=>{started=Date.now();waiting="ready";b.textContent="CLICK NOW!";b.style.background="#16834c"},1000+Math.random()*3000)}else{clearTimeout(timer);waiting=false;b.textContent="Try again";say("Too soon!")} };
+  cleanup=()=>clearTimeout(timer);
+ }
+ // 15 MATH
+ if(i===14){
+  let a,b,answer,score=0,round=0,x=input("Your answer"),question=el("div","big");
+  function next(){a=Math.ceil(Math.random()*20);b=Math.ceil(Math.random()*20);answer=a+b;question.textContent=a+" + "+b+" = ?";x.value="";round++;say("Score: "+score+" | Round: "+round)}
+  btn("Submit",()=>{if(Number(x.value)===answer){score++;say("Correct! Score: "+score)}else say("Incorrect. Answer: "+answer);next()});next();
+ }
+ // 16 CONNECT FOUR
+ if(i===15){
+  let a=Array(42).fill(""),turn="🔴",done=false,b=board(7);
+  function win(j){let r=Math.floor(j/7),c=j%7;for(let [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){let n=1;for(let s of [-1,1]){let rr=r+dr*s,cc=c+dc*s;while(rr>=0&&rr<6&&cc>=0&&cc<7&&a[rr*7+cc]===turn){n++;rr+=dr*s;cc+=dc*s}}if(n>=4)return true}return false}
+  for(let c=0;c<7;c++)cell(b,"↓",()=>{if(done)return;let r=5;while(r>=0&&a[r*7+c])r--;if(r<0)return;let j=r*7+c;a[j]=turn;b.children[j].textContent=turn;if(win(j)){done=true;say(turn+" wins!")}else if(a.every(Boolean)){done=true;say("Draw!")}else turn=turn==="🔴"?"🟡":"🔴";});
+  btn("↻ Restart",again);
+ }
+}
+drawGrid();
+</script>
+</body>
+</html>
+
