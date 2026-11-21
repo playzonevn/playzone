@@ -215,269 +215,537 @@ entities.push(bot);
 for (let i = 0; i < 90; i++) spawnMushroom();
 document.getElementById('select-screen').style.display = 'none';
 document.getElementById('game-over').style.display = 'none';
-document.getElementById('hud').style.display = 'block';
-gameRunning = true;
-lastTime = performance.now();
-requestAnimationFrame(gameLoop);
+  document.getElementById('hud').style.display = 'block';
+  gameRunning = true;
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
 }
-
 
 function createFighter(template, x, y, isPlayer) {
-return {
-...template, isPlayer, x, y, maxHp: template.hp, hp: template.hp,
-level: 1, xp: 0, nextXp: 50, kills: 0, facing: 1, angle: 0,
-state: 'Idle', stateTimer: 0, animTick: Math.random() * 100,
-atkCd: 0, skillCd: 0, dashCd: 0, deathAlpha: 1
-};
+  return {
+    id: template.id,
+    name: template.name,
+    role: template.role,
+    type: template.type,
+    color: template.color,
+    isPlayer: isPlayer,
+    x: x,
+    y: y,
+    maxHp: template.hp,
+    hp: template.hp,
+    spd: template.spd,
+    dmg: template.dmg,
+    range: template.range,
+    level: 1,
+    xp: 0,
+    nextXp: 50,
+    kills: 0,
+    facing: 1,
+    angle: 0,
+    state: 'Idle',
+    stateTimer: 0,
+    animTick: Math.random() * 100,
+    atkCd: 0,
+    skillCd: 0,
+    dashCd: 0,
+    deathAlpha: 1
+  };
 }
+
 function spawnMushroom() {
-const isRare = Math.random() < 0.2;
-mushrooms.push({
-x: 80 + Math.random() * (MAP_SIZE - 160),
-y: 80 + Math.random() * (MAP_SIZE - 160),
-xp: isRare ? 35 : 15, color: isRare ? '#facc15' : '#f43f5e', r: isRare ? 13 : 9
-});
+  const isRare = Math.random() < 0.2;
+  mushrooms.push({
+    x: 80 + Math.random() * (MAP_SIZE - 160),
+    y: 80 + Math.random() * (MAP_SIZE - 160),
+    xp: isRare ? 35 : 15,
+    color: isRare ? '#facc15' : '#f43f5e',
+    r: isRare ? 13 : 9
+  });
 }
-function setState(f, newState, duration = 0.25) {
-if (f.state !== 'Death') { f.state = newState; f.stateTimer = duration; }
+
+function setState(f, newState, duration) {
+  if (f.state !== 'Death') {
+    f.state = newState;
+    f.stateTimer = duration || 0.25;
+  }
 }
+
 function triggerAttack(f) {
-if (f.atkCd > 0 || f.state === 'Death') return;
-f.atkCd = 0.45;
-setState(f, 'Attack', 0.22);
-if (f.type === 'melee') {
-addParticle(f.x + Math.cos(f.angle) * 40, f.y + Math.sin(f.angle) * 40, f.color, 28, 0.2);
-entities.forEach(t => {
-if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) <= f.range + f.level * 4) {
-dealDamage(f, t, f.dmg + f.level * 3);
+  if (f.atkCd > 0 || f.state === 'Death') return;
+  f.atkCd = 0.45;
+  setState(f, 'Attack', 0.22);
+
+  if (f.type === 'melee') {
+    addParticle(f.x + Math.cos(f.angle) * 40, f.y + Math.sin(f.angle) * 40, f.color, 28, 0.2);
+    for (let i = 0; i < entities.length; i++) {
+      const t = entities[i];
+      if (t !== f && t.state !== 'Death') {
+        const dist = Math.hypot(t.x - f.x, t.y - f.y);
+        if (dist <= f.range + f.level * 4) {
+          dealDamage(f, t, f.dmg + f.level * 3);
+        }
+      }
+    }
+  } else {
+    projectiles.push({
+      owner: f,
+      x: f.x,
+      y: f.y,
+      vx: Math.cos(f.angle) * 9,
+      vy: Math.sin(f.angle) * 9,
+      dmg: f.dmg + f.level * 3,
+      color: f.color,
+      life: 45,
+      r: 8
+    });
+  }
 }
-});
-} else {
-projectiles.push({
-owner: f, x: f.x, y: f.y, vx: Math.cos(f.angle) * 9, vy: Math.sin(f.angle) * 9,
-dmg: f.dmg + f.level * 3, color: f.color, life: 45, r: 8
-});
-}
-}
+
 function triggerSkill(f) {
-if (f.skillCd > 0 || f.state === 'Death') return;
-f.skillCd = 3.5;
-setState(f, 'Skill', 0.35);
-if (f.type === 'melee') {
-f.x += Math.cos(f.angle) * 75; f.y += Math.sin(f.angle) * 75;
-addParticle(f.x, f.y, f.color, 65, 0.35);
-entities.forEach(t => {
-if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 110) {
-dealDamage(f, t, (f.dmg + f.level * 4) * 1.6);
+  if (f.skillCd > 0 || f.state === 'Death') return;
+  f.skillCd = 3.5;
+  setState(f, 'Skill', 0.35);
+
+  if (f.type === 'melee') {
+    f.x += Math.cos(f.angle) * 75;
+    f.y += Math.sin(f.angle) * 75;
+    addParticle(f.x, f.y, f.color, 65, 0.35);
+    for (let i = 0; i < entities.length; i++) {
+      const t = entities[i];
+      if (t !== f && t.state !== 'Death' && Math.hypot(t.x - f.x, t.y - f.y) < 110) {
+        dealDamage(f, t, (f.dmg + f.level * 4) * 1.6);
+      }
+    }
+  } else {
+    for (let i = -2; i <= 2; i++) {
+      const a = f.angle + i * 0.18;
+      projectiles.push({
+        owner: f,
+        x: f.x,
+        y: f.y,
+        vx: Math.cos(a) * 10,
+        vy: Math.sin(a) * 10,
+        dmg: (f.dmg + f.level * 3) * 0.85,
+        color: '#facc15',
+        life: 45,
+        r: 10
+      });
+    }
+  }
 }
-});
-} else {
-for (let i = -2; i <= 2; i++) {
-const a = f.angle + i * 0.18;
-projectiles.push({
-owner: f, x: f.x, y: f.y, vx: Math.cos(a) * 10, vy: Math.sin(a) * 10,
-dmg: (f.dmg + f.level * 3) * 0.85, color: '#facc15', life: 45, r: 10
-});
-}
-}
-}
+
 function triggerDash(f) {
-if (f.dashCd > 0 || f.state === 'Death') return;
-f.dashCd = 2.0;
-setState(f, 'Dash', 0.2);
-f.x += Math.cos(f.angle) * 110; f.y += Math.sin(f.angle) * 110;
-addParticle(f.x, f.y, '#38bdf8', 35, 0.25);
+  if (f.dashCd > 0 || f.state === 'Death') return;
+  f.dashCd = 2.0;
+  setState(f, 'Dash', 0.2);
+  f.x += Math.cos(f.angle) * 110;
+  f.y += Math.sin(f.angle) * 110;
+  addParticle(f.x, f.y, '#38bdf8', 35, 0.25);
 }
+
 function dealDamage(attacker, target, amount) {
-if (target.state === 'Dash' || target.state === 'Death') return;
-target.hp -= amount;
-setState(target, 'Hit', 0.18);
-addParticle(target.x, target.y - 20, '#ef4444', 18, 0.2);
-if (target.hp <= 0) {
-target.hp = 0; target.state = 'Death'; attacker.kills++;
-gainXp(attacker, 45 + target.level * 15);
-attacker.hp = Math.min(attacker.maxHp, attacker.hp + 30);
+  if (target.state === 'Dash' || target.state === 'Death') return;
+  target.hp -= amount;
+  setState(target, 'Hit', 0.18);
+  addParticle(target.x, target.y - 20, '#ef4444', 18, 0.2);
+
+  if (target.hp <= 0) {
+    target.hp = 0;
+    target.state = 'Death';
+    attacker.kills++;
+    gainXp(attacker, 45 + target.level * 15);
+    attacker.hp = Math.min(attacker.maxHp, attacker.hp + 30);
+  }
 }
-}
+
 function gainXp(f, amount) {
-f.xp += amount;
-while (f.xp >= f.nextXp) {
-f.xp -= f.nextXp; f.level++; f.nextXp = Math.round(f.nextXp * 1.35);
-f.maxHp += 25; f.hp = f.maxHp;
-addParticle(f.x, f.y, '#facc15', 50, 0.4);
+  f.xp += amount;
+  while (f.xp >= f.nextXp) {
+    f.xp -= f.nextXp;
+    f.level++;
+    f.nextXp = Math.round(f.nextXp * 1.35);
+    f.maxHp += 25;
+    f.hp = f.maxHp;
+    addParticle(f.x, f.y, '#facc15', 50, 0.4);
+  }
 }
-}
+
 function addParticle(x, y, color, radius, life) {
-particles.push({ x, y, color, radius, life, maxLife: life });
+  particles.push({
+    x: x,
+    y: y,
+    color: color,
+    radius: radius,
+    life: life,
+    maxLife: life
+  });
 }
+
 function update(dt) {
-entities.forEach(f => {
-f.animTick += dt * 8;
-if (f.atkCd > 0) f.atkCd -= dt;
-if (f.skillCd > 0) f.skillCd -= dt;
-if (f.dashCd > 0) f.dashCd -= dt;
-if (f.state === 'Death') { f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8); return; }
-if (f.stateTimer > 0) { f.stateTimer -= dt; if (f.stateTimer <= 0) f.state = 'Idle'; }
-let moveX = 0, moveY = 0;
-if (f.isPlayer) {
-if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
-if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
-if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
-if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
-f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
-} else {
-let nearestEnemy = null, minEDist = 360;
-entities.forEach(other => {
-if (other !== f && other.state !== 'Death') {
-const d = Math.hypot(other.x - f.x, other.y - f.y);
-if (d < minEDist) { minEDist = d; nearestEnemy = other; }
+  for (let idx = 0; idx < entities.length; idx++) {
+    const f = entities[idx];
+    f.animTick += dt * 8;
+    if (f.atkCd > 0) f.atkCd -= dt;
+    if (f.skillCd > 0) f.skillCd -= dt;
+    if (f.dashCd > 0) f.dashCd -= dt;
+
+    if (f.state === 'Death') {
+      f.deathAlpha = Math.max(0, f.deathAlpha - dt * 0.8);
+      continue;
+    }
+
+    if (f.stateTimer > 0) {
+      f.stateTimer -= dt;
+      if (f.stateTimer <= 0) {
+        f.state = 'Idle';
+      }
+    }
+
+    let moveX = 0;
+    let moveY = 0;
+
+    if (f.isPlayer) {
+      if (keys['KeyW'] || keys['ArrowUp']) moveY -= 1;
+      if (keys['KeyS'] || keys['ArrowDown']) moveY += 1;
+      if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+      if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+      f.angle = Math.atan2(mouse.y - canvas.height / 2, mouse.x - canvas.width / 2);
+    } else {
+      let nearestEnemy = null;
+      let minEDist = 360;
+
+      for (let j = 0; j < entities.length; j++) {
+        const other = entities[j];
+        if (other !== f && other.state !== 'Death') {
+          const d = Math.hypot(other.x - f.x, other.y - f.y);
+          if (d < minEDist) {
+            minEDist = d;
+            nearestEnemy = other;
+          }
+        }
+      }
+
+      if (nearestEnemy) {
+        f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
+        if (minEDist > f.range * 0.85) {
+          moveX = Math.cos(f.angle);
+          moveY = Math.sin(f.angle);
+        } else {
+          triggerAttack(f);
+          if (Math.random() < 0.02) triggerSkill(f);
+          if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
+        }
+      } else {
+        let nearestMush = null;
+        let minMDist = 9999;
+
+        for (let m = 0; m < mushrooms.length; m++) {
+          const d = Math.hypot(mushrooms[m].x - f.x, mushrooms[m].y - f.y);
+          if (d < minMDist) {
+            minMDist = d;
+            nearestMush = mushrooms[m];
+          }
+        }
+
+        if (nearestMush) {
+          f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
+          moveX = Math.cos(f.angle);
+          moveY = Math.sin(f.angle);
+        }
+      }
+    }
+
+    if (moveX !== 0 || moveY !== 0) {
+      const len = Math.hypot(moveX, moveY);
+      f.x += (moveX / len) * f.spd;
+      f.y += (moveY / len) * f.spd;
+      if (moveX < 0) f.facing = -1;
+      if (moveX > 0) f.facing = 1;
+      if (f.state === 'Idle') f.state = 'Walk';
+    } else if (f.state === 'Walk') {
+      f.state = 'Idle';
+    }
+
+    f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
+    f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
+
+    for (let o = 0; o < obstacles.length; o++) {
+      const obs = obstacles[o];
+      const dx = f.x - obs.x;
+      const dy = f.y - obs.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < obs.r + 22 && dist > 0) {
+        f.x = obs.x + (dx / dist) * (obs.r + 22);
+        f.y = obs.y + (dy / dist) * (obs.r + 22);
+      }
+    }
+
+    for (let i = mushrooms.length - 1; i >= 0; i--) {
+      if (Math.hypot(f.x - mushrooms[i].x, f.y - mushrooms[i].y) < 34) {
+        gainXp(f, mushrooms[i].xp);
+        mushrooms.splice(i, 1);
+        spawnMushroom();
+      }
+    }
+  }
+
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    let hit = false;
+
+    for (let j = 0; j < entities.length; j++) {
+      const t = entities[j];
+      if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 28) {
+        dealDamage(p.owner, t, p.dmg);
+        hit = true;
+      }
+    }
+
+    if (hit || p.life <= 0) {
+      projectiles.splice(i, 1);
+    }
+  }
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].life -= dt;
+    if (particles[i].life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+
+  updateHUD();
 }
-});
-if (nearestEnemy) {
-f.angle = Math.atan2(nearestEnemy.y - f.y, nearestEnemy.x - f.x);
-if (minEDist > f.range * 0.85) { moveX = Math.cos(f.angle); moveY = Math.sin(f.angle); }
-else {
-triggerAttack(f);
-if (Math.random() < 0.02) triggerSkill(f);
-if (f.hp < f.maxHp * 0.35 && Math.random() < 0.03) triggerDash(f);
-}
-} else {
-let nearestMush = null, minMDist = 9999;
-mushrooms.forEach(m => {
-const d = Math.hypot(m.x - f.x, m.y - f.y);
-if (d < minMDist) { minMDist = d; nearestMush = m; }
-});
-if (nearestMush) {
-f.angle = Math.atan2(nearestMush.y - f.y, nearestMush.x - f.x);
-moveX = Math.cos(f.angle); moveY = Math.sin(f.angle);
-}
-}
-}
-if (moveX !== 0 || moveY !== 0) {
-const len = Math.hypot(moveX, moveY);
-f.x += (moveX / len) * f.spd; f.y += (moveY / len) * f.spd;
-if (moveX < 0) f.facing = -1;
-if (moveX > 0) f.facing = 1;
-if (f.state === 'Idle') f.state = 'Walk';
-} else if (f.state === 'Walk') f.state = 'Idle';
-f.x = Math.max(40, Math.min(MAP_SIZE - 40, f.x));
-f.y = Math.max(40, Math.min(MAP_SIZE - 40, f.y));
-obstacles.forEach(obs => {
-const dx = f.x - obs.x, dy = f.y - obs.y, dist = Math.hypot(dx, dy);
-if (dist < obs.r + 22 && dist > 0) {
-f.x = obs.x + (dx / dist) * (obs.r + 22);
-f.y = obs.y + (dy / dist) * (obs.r + 22);
-}
-});
-for (let i = mushrooms.length - 1; i >= 0; i--) {
-if (Math.hypot(f.x - mushrooms[i].x, f.y - mushrooms[i].y) < 34) {
-gainXp(f, mushrooms[i].xp); mushrooms.splice(i, 1); spawnMushroom();
-}
-}
-});
-for (let i = projectiles.length - 1; i >= 0; i--) {
-const p = projectiles[i]; p.x += p.vx; p.y += p.vy; p.life--;
-let hit = false;
-entities.forEach(t => {
-if (!hit && t !== p.owner && t.state !== 'Death' && Math.hypot(t.x - p.x, t.y - p.y) < 28) {
-dealDamage(p.owner, t, p.dmg); hit = true;
-}
-});
-if (hit || p.life <= 0) projectiles.splice(i, 1);
-}
-for (let i = particles.length - 1; i >= 0; i--) {
-particles[i].life -= dt; if (particles[i].life <= 0) particles.splice(i, 1);
-}
-updateHUD();
-}
+
 function updateHUD() {
-const alive = entities.filter(e => e.state !== 'Death');
-document.getElementById('player-title').innerText = Cấp ${player.level} • ${player.name} (${player.kills} Hạ gục);
-document.getElementById('hp-bar').style.width = ${(player.hp / player.maxHp) * 100}%;
-document.getElementById('xp-bar').style.width = ${(player.xp / player.nextXp) * 100}%;
-document.getElementById('alive-count').innerText = Chiến binh còn sống: ${alive.length}/16;
-const top5 = [...alive].sort((a, b) => b.level - a.level || b.kills - a.kills).slice(0, 5);
-document.getElementById('lb-list').innerHTML = top5.map((e, i) =>
-<div class="lb-item" style="color:${e.isPlayer ? '#facc15' : '#e2e8f0'}"><span>${i + 1}. ${e.name}</span><span>Lv.${e.level}</span></div>
-).join('');
-if (player.state === 'Death' || alive.length === 1) {
-gameRunning = false;
-document.getElementById('game-over').style.display = 'flex';
-document.getElementById('end-title').innerText = player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
-document.getElementById('end-stats').innerText = Đạt Cấp ${player.level} • Hạ gục ${player.kills} đối thủ;
+  const alive = entities.filter(function(e) {
+    return e.state !== 'Death';
+  });
+
+  document.getElementById('player-title').innerText =
+    'Cấp ' + player.level + ' • ' + player.name + ' (' + player.kills + ' Hạ gục)';
+  document.getElementById('hp-bar').style.width = ((player.hp / player.maxHp) * 100) + '%';
+  document.getElementById('xp-bar').style.width = ((player.xp / player.nextXp) * 100) + '%';
+  document.getElementById('alive-count').innerText = 'Còn sống: ' + alive.length + '/16';
+
+  const top5 = alive
+    .slice()
+    .sort(function(a, b) {
+      return b.level - a.level || b.kills - a.kills;
+    })
+    .slice(0, 5);
+
+  let lbHtml = '';
+  for (let i = 0; i < top5.length; i++) {
+    const e = top5[i];
+    const color = e.isPlayer ? '#facc15' : '#e2e8f0';
+    lbHtml +=
+      '<div style="display:flex;justify-content:space-between;margin:2px 0;color:' +
+      color +
+      '"><span>' +
+      (i + 1) +
+      '. ' +
+      e.name +
+      '</span><span>Lv.' +
+      e.level +
+      '</span></div>';
+  }
+  document.getElementById('lb-list').innerHTML = lbHtml;
+
+  if (player.state === 'Death' || alive.length === 1) {
+    gameRunning = false;
+    document.getElementById('game-over').style.display = 'flex';
+    document.getElementById('end-title').innerText =
+      player.state === 'Death' ? 'BẠN ĐÃ BỊ HẠ GỤC' : '🏆 VUA BỘ LẠC CHIẾN THẮNG!';
+    document.getElementById('end-stats').innerText =
+      'Đạt Cấp ' + player.level + ' • Hạ gục ' + player.kills + ' đối thủ';
+  }
 }
-}
+
 function draw() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-const camX = player.x - canvas.width / 2, camY = player.y - canvas.height / 2;
-ctx.save(); ctx.translate(-camX, -camY);
-ctx.fillStyle = '#365314'; ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 2;
-for (let x = 0; x <= MAP_SIZE; x += 100) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke(); }
-for (let y = 0; y <= MAP_SIZE; y += 100) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke(); }
-ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 10; ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-mushrooms.forEach(m => {
-ctx.fillStyle = 'rgba(0,0,0,0.3)';
-ctx.beginPath(); ctx.ellipse(m.x, m.y + 6, m.r, m.r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
-ctx.fillStyle = '#fef3c7'; ctx.fillRect(m.x - 3, m.y - 2, 6, 8);
-ctx.fillStyle = m.color; ctx.beginPath(); ctx.arc(m.x, m.y - 3, m.r, Math.PI, 0); ctx.fill();
-});
-const renderList = [
-...obstacles.map(o => ({ kind: 'obs', y: o.y, data: o })),
-...entities.map(e => ({ kind: 'fighter', y: e.y, data: e }))
-].sort((a, b) => a.y - b.y);
-renderList.forEach(item => {
-if (item.kind === 'obs') {
-const o = item.data;
-ctx.fillStyle = 'rgba(0,0,0,0.35)';
-ctx.beginPath(); ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
-ctx.beginPath(); ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2); ctx.fill();
-if (o.type === 'fire') {
-ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2); ctx.fill();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const camX = player.x - canvas.width / 2;
+  const camY = player.y - canvas.height / 2;
+
+  ctx.save();
+  ctx.translate(-camX, -camY);
+
+  ctx.fillStyle = '#365314';
+  ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 2;
+  for (let x = 0; x <= MAP_SIZE; x += 100) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, MAP_SIZE);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= MAP_SIZE; y += 100) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(MAP_SIZE, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+  for (let i = 0; i < mushrooms.length; i++) {
+    const m = mushrooms[i];
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(m.x, m.y + 6, m.r, m.r * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.fillRect(m.x - 3, m.y - 2, 6, 8);
+
+    ctx.fillStyle = m.color;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y - 3, m.r, Math.PI, 0);
+    ctx.fill();
+  }
+
+  const renderList = [];
+  for (let i = 0; i < obstacles.length; i++) {
+    renderList.push({ kind: 'obs', y: obstacles[i].y, data: obstacles[i] });
+  }
+  for (let i = 0; i < entities.length; i++) {
+    renderList.push({ kind: 'fighter', y: entities[i].y, data: entities[i] });
+  }
+  renderList.sort(function(a, b) {
+    return a.y - b.y;
+  });
+
+  for (let i = 0; i < renderList.length; i++) {
+    const item = renderList[i];
+    if (item.kind === 'obs') {
+      const o = item.data;
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(o.x, o.y + 10, o.r, o.r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = o.type === 'totem' ? '#92400e' : (o.type === 'rock' ? '#64748b' : '#ea580c');
+      ctx.beginPath();
+      ctx.arc(o.x, o.y - 10, o.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (o.type === 'fire') {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(o.x, o.y - 14, o.r * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      drawFighter(item.data);
+    }
+  }
+
+  for (let i = 0; i < projectiles.length; i++) {
+    const p = projectiles[i];
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < particles.length; i++) {
+    const pt = particles[i];
+    ctx.globalAlpha = pt.life / pt.maxLife;
+    ctx.fillStyle = pt.color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
 }
-} else drawFighter(item.data);
-});
-projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
-particles.forEach(pt => {
-ctx.globalAlpha = pt.life / pt.maxLife; ctx.fillStyle = pt.color;
-ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-});
-ctx.restore();
-}
+
 function drawFighter(f) {
-if (f.deathAlpha <= 0) return;
-ctx.save(); ctx.globalAlpha = f.deathAlpha; ctx.translate(f.x, f.y);
-ctx.fillStyle = 'rgba(0,0,0,0.4)';
-ctx.beginPath(); ctx.ellipse(0, 26, 24, 12, 0, 0, Math.PI * 2); ctx.fill();
-let scaleX = f.facing, scaleY = 1, rot = 0, offsetY = 0;
-if (f.state === 'Idle') scaleY = 1 + Math.sin(f.animTick * 0.5) * 0.04;
-else if (f.state === 'Walk') { offsetY = -Math.abs(Math.sin(f.animTick * 1.4)) * 8; rot = Math.sin(f.animTick * 1.4) * 0.08; }
-else if (f.state === 'Attack') { rot = f.facing * 0.25; scaleX = f.facing * 1.15; }
-else if (f.state === 'Skill') { scaleX = f.facing * 1.25; scaleY = 1.25; }
-else if (f.state === 'Hit') { offsetY = -5; rot = -f.facing * 0.2; }
-else if (f.state === 'Dash') { scaleX = f.facing * 1.3; scaleY = 0.8; }
-else if (f.state === 'Death') { rot = f.facing * (Math.PI / 2); offsetY = 15; }
-ctx.save(); ctx.translate(0, offsetY); ctx.rotate(rot); ctx.scale(scaleX, scaleY);
-const size = 64 + f.level * 2;
-if (charSprites[f.id]) ctx.drawImage(charSprites[f.id], -size / 2, -size + 25, size, size * 1.12);
-if (f.state === 'Hit') { ctx.fillStyle = 'rgba(239, 68, 68, 0.45)'; ctx.fillRect(-size / 2, -size + 25, size, size * 1.12); }
-ctx.restore();
-if (f.state !== 'Death') {
-ctx.fillStyle = '#0f172a'; ctx.fillRect(-26, -52, 52, 6);
-ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
-ctx.fillRect(-25, -51, 50 * (f.hp / f.maxHp), 4);
-ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-ctx.fillText(Lv.${f.level} ${f.name}, 0, -57);
+  if (f.deathAlpha <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = f.deathAlpha;
+  ctx.translate(f.x, f.y);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(0, 26, 24, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  let scaleX = f.facing;
+  let scaleY = 1;
+  let rot = 0;
+  let offsetY = 0;
+
+  if (f.state === 'Idle') {
+    scaleY = 1 + Math.sin(f.animTick * 0.5) * 0.04;
+  } else if (f.state === 'Walk') {
+    offsetY = -Math.abs(Math.sin(f.animTick * 1.4)) * 8;
+    rot = Math.sin(f.animTick * 1.4) * 0.08;
+  } else if (f.state === 'Attack') {
+    rot = f.facing * 0.25;
+    scaleX = f.facing * 1.15;
+  } else if (f.state === 'Skill') {
+    scaleX = f.facing * 1.25;
+    scaleY = 1.25;
+  } else if (f.state === 'Hit') {
+    offsetY = -5;
+    rot = -f.facing * 0.2;
+  } else if (f.state === 'Dash') {
+    scaleX = f.facing * 1.3;
+    scaleY = 0.8;
+  } else if (f.state === 'Death') {
+    rot = f.facing * (Math.PI / 2);
+    offsetY = 15;
+  }
+
+  ctx.save();
+  ctx.translate(0, offsetY);
+  ctx.rotate(rot);
+  ctx.scale(scaleX, scaleY);
+
+  const size = 64 + f.level * 2;
+  if (charSprites[f.id]) {
+    ctx.drawImage(charSprites[f.id], -size / 2, -size + 25, size, size * 1.12);
+  }
+
+  if (f.state === 'Hit') {
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+    ctx.fillRect(-size / 2, -size + 25, size, size * 1.12);
+  }
+  ctx.restore();
+
+  if (f.state !== 'Death') {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(-26, -52, 52, 6);
+
+    ctx.fillStyle = f.isPlayer ? '#22c55e' : '#ef4444';
+    ctx.fillRect(-25, -51, 50 * (f.hp / f.maxHp), 4);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Lv.' + f.level + ' ' + f.name, 0, -57);
+  }
+
+  ctx.restore();
 }
-ctx.restore();
-}
+
 function gameLoop(now) {
-if (!gameRunning) return;
-const dt = Math.min(0.05, (now - lastTime) / 1000);
-lastTime = now;
-update(dt); draw();
-requestAnimationFrame(gameLoop);
+  if (!gameRunning) return;
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(gameLoop);
 }
-document.getElementById('start-btn').onclick = initArena;
-document.getElementById('restart-btn').onclick = initArena;
+</script>
+</body>
+</html>
