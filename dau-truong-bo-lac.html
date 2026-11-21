@@ -201,20 +201,20 @@ function initArena() {
       x: 150 + Math.random() * (MAP_SIZE - 300),
       y: 150 + Math.random() * (MAP_SIZE - 300),
       r: 35 + Math.random() * 20,
-type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
-});
-}
-player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
-entities.push(player);
-for (let i = 1; i < 16; i++) {
-const t = CHARACTERS[i % CHARACTERS.length];
-const bot = createFighter(t, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
-bot.name = ${t.name} #${i};
-entities.push(bot);
-}
-for (let i = 0; i < 90; i++) spawnMushroom();
-document.getElementById('select-screen').style.display = 'none';
-document.getElementById('game-over').style.display = 'none';
+      type: i % 3 === 0 ? 'totem' : (i % 3 === 1 ? 'rock' : 'fire')
+    });
+  }
+  player = createFighter(CHARACTERS[selectedCharId], MAP_SIZE / 2, MAP_SIZE / 2, true);
+  entities.push(player);
+  for (let i = 1; i < 16; i++) {
+    const t = CHARACTERS[i % CHARACTERS.length];
+    const bot = createFighter(t, 150 + Math.random() * (MAP_SIZE - 300), 150 + Math.random() * (MAP_SIZE - 300), false);
+    bot.name = t.name + ' #' + i;
+    entities.push(bot);
+  }
+  for (let i = 0; i < 90; i++) spawnMushroom();
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('game-over').style.display = 'none';
   document.getElementById('hud').style.display = 'block';
   gameRunning = true;
   lastTime = performance.now();
@@ -746,3 +746,8 @@ function gameLoop(now) {
   draw();
   requestAnimationFrame(gameLoop);
 }
+document.getElementById('start-btn').onclick = initArena;
+document.getElementById('restart-btn').onclick = initArena;
+</script>
+</body>
+</html>
