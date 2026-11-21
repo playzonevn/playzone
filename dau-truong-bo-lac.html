@@ -1,152 +1,943 @@
-            spawnMushroom(this.x + (Math.random() - 0.5) * 80, this.y + (Math.random() - 0.5) * 80, true);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ngôi Sao Bộ Lạc - BarbarQ Mobile Web</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #1e272e; color: white; }
+        
+        /* Cảnh báo xoay ngang điện thoại */
+        #rotate-warning {
+            display: none; position: fixed; inset: 0; background: #1e272e; z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
         }
-        if (this.isPlayer) {
-            document.getElementById('final-score').innerText = `Điểm đạt được: ${this.score} (Cấp ${this.level})`;
-            document.getElementById('gameover-screen').style.display = 'flex';
-        } else {
-            // Hồi sinh Bot sau 3 giây
-            setTimeout(() => respawnBot(this), 3000);
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #rotate-warning { display: flex; }
         }
+
+        /* Màn hình Đăng nhập / Đăng ký */
+        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; background: radial-gradient(circle, #2f3640, #1e272e); }
+        .card { background: rgba(0, 0, 0, 0.75); border: 3px solid #f39c12; border-radius: 16px; padding: 20px 28px; width: 340px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.6); text-align: center; }
+        .card h2 { color: #f1c40f; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .input-group { margin-bottom: 12px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; color: #dcdde1; margin-bottom: 4px; }
+        .input-group input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 2px solid #7f8fa6; background: #2f3640; color: white; font-size: 14px; outline: none; }
+        .input-group input:focus { border-color: #f1c40f; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.15s; margin-top: 6px; }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; box-shadow: 0 4px 0 #d35400; }
+        .btn-secondary { background: #353b48; color: #dcdde1; font-size: 13px; margin-top: 10px; }
+        .msg-err { color: #ff6b6b; font-size: 12px; margin-top: 6px; min-height: 16px; }
+
+        /* Sảnh chính (Lobby) */
+        #lobby-screen { display: none; flex-direction: row; justify-content: space-around; padding: 15px; gap: 15px; }
+        .lobby-left, .lobby-right { background: rgba(0,0,0,0.65); border: 2px solid #7f8fa6; border-radius: 14px; padding: 15px; height: 90%; display: flex; flex-direction: column; justify-content: space-between; }
+        .lobby-left { width: 42%; align-items: center; text-align: center; }
+        .lobby-right { width: 54%; }
+        .exp-bar-bg { width: 100%; height: 14px; background: #353b48; border-radius: 7px; overflow: hidden; margin: 6px 0; border: 1px solid #718093; }
+        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #00a8ff, #0097e6); width: 0%; transition: 0.3s; }
+        .talent-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.08); padding: 7px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+        .talent-btn { background: #2ecc71; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-weight: bold; cursor: pointer; }
+        .talent-btn:disabled { background: #7f8fa6; cursor: not-allowed; }
+
+        /* Màn hình Game */
+        #game-container { display: none; position: fixed; inset: 0; }
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+        #hud { position: absolute; inset: 0; pointer-events: none; }
+
+        /* Góc trên trái: K/D/A & Cân nặng */
+        #hud-kda {
+            position: absolute; top: 10px; left: 12px;
+            background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px; border-radius: 10px; font-size: 13px;
+        }
+        .kda-nums { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+
+        /* Chính giữa trên: Đồng hồ 3 phút + Radar bản đồ nhiệt */
+        #hud-top-center {
+            position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        #timer-box {
+            background: rgba(0, 0, 0, 0.65); border: 2px solid #f1c40f;
+            padding: 3px 14px; border-radius: 20px; font-weight: bold; font-size: 16px; color: #f1c40f;
+        }
+        #radarCanvas {
+            background: rgba(0, 0, 0, 0.6); border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        /* Bảng xếp hạng góc trên phải */
+        #hud-lb {
+            position: absolute; top: 10px; right: 12px;
+            background: rgba(0, 0, 0, 0.55); padding: 6px 10px; border-radius: 10px; font-size: 12px; min-width: 135px;
+        }
+        #hud-lb h4 { color: #f1c40f; margin-bottom: 3px; text-align: center; }
+
+        /* Chọn 3 kỹ năng Roguelite trong trận */
+        #skill-choices {
+            display: none; position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%);
+            gap: 8px; pointer-events: auto; z-index: 20;
+        }
+        .roguelite-btn {
+            background: linear-gradient(135deg, #f39c12, #d35400); border: 2px solid #fff;
+            border-radius: 10px; color: white; padding: 7px 11px; font-size: 12px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); min-width: 98px; text-align: center;
+        }
+
+        /* Nút điều khiển Mobile góc phải dưới */
+        #mobile-buttons { position: absolute; bottom: 20px; right: 25px; display: flex; align-items: flex-end; gap: 14px; pointer-events: auto; }
+        .act-btn {
+            border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); color: white; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer; position: relative; overflow: hidden;
+        }
+        #btn-atk { width: 82px; height: 82px; background: radial-gradient(#ff6b6b, #c0392b); font-size: 16px; }
+        #btn-skl { width: 64px; height: 64px; background: radial-gradient(#48dbfb, #2980b9); font-size: 13px; margin-bottom: 6px; }
+        .act-btn:active { transform: scale(0.92); }
+
+        /* Tổng kết trận đấu */
+        #end-modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Cảnh báo xoay ngang -->
+<div id="rotate-warning">
+    <div style="font-size: 48px; margin-bottom: 12px;">📱🔄</div>
+    <h2>VUI LÒNG XOAY NGANG ĐIỆN THOẠI</h2>
+    <p style="color: #dcdde1; margin-top: 8px;">Game Ngôi Sao Bộ Lạc tối ưu trải nghiệm ở màn hình ngang.</p>
+</div>
+
+<!-- 1. Màn hình Đăng nhập / Đăng ký -->
+<div id="auth-screen" class="screen">
+    <div class="card">
+        <h2 id="auth-title">ĐĂNG NHẬP BỘ LẠC</h2>
+        <div class="input-group">
+            <label>Tên đăng nhập (Username)</label>
+            <input type="text" id="auth-user" placeholder="Nhập username..." autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label>Mật khẩu (Password)</label>
+            <input type="password" id="auth-pass" placeholder="Nhập mật khẩu...">
+        </div>
+        <div class="msg-err" id="auth-msg"></div>
+        <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuth()">VÀO SẢNH</button>
+        <button class="btn btn-secondary" id="auth-toggle-btn" onclick="toggleAuthMode()">Chưa có tài khoản? Đăng ký mới</button>
+    </div>
+</div>
+
+<!-- 2. Màn hình Sảnh Chính & Cộng Kỹ Năng -->
+<div id="lobby-screen" class="screen">
+    <div class="lobby-left">
+        <div style="width: 100%; display: flex; justify-content: space-between; font-size: 13px;">
+            <span>👤 <b id="lb-username" style="color:#f1c40f;"></b></span>
+            <span style="color:#ff6b6b; cursor:pointer; text-decoration:underline;" onclick="logout()">Đăng xuất</span>
+        </div>
+        
+        <canvas id="previewCanvas" width="130" height="130"></canvas>
+        
+        <div>
+            <h3 style="color:#f1c40f;">TƯỚNG: BỘ BỘ</h3>
+            <p style="font-size: 12px; color:#dcdde1;">Kỹ năng: Nhảy Bổ Rìu Diện Rộng</p>
+        </div>
+
+        <div style="width: 100%;">
+            <div style="display:flex; justify-content:space-between; font-size:12px;">
+                <span>Cấp Tài Khoản: <b id="acc-lv" style="color:#2ecc71;">1</b></span>
+                <span id="acc-exp-text">0 / 100 EXP</span>
+            </div>
+            <div class="exp-bar-bg"><div class="exp-bar-fill" id="acc-exp-bar"></div></div>
+        </div>
+    </div>
+
+    <div class="lobby-right">
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="color:#f1c40f;">BẢNG THIÊN PHÚ (CỘNG SKILL)</h3>
+                <span style="background:#e67e22; padding:3px 8px; border-radius:6px; font-size:12px; font-weight:bold;">
+                    Điểm dư: <span id="talent-pts">0</span>
+                </span>
+            </div>
+            <p style="font-size: 11px; color:#bdc3c7; margin-bottom: 8px;">Lên cấp 2 trở lên nhận điểm cộng vĩnh viễn để mạnh hơn khi vào trận!</p>
+
+            <div class="talent-row">
+                <span>🪓 Sức mạnh Rìu (+5 DMG/cấp) — Lv.<b id="t-dmg">0</b></span>
+                <button class="talent-btn" onclick="upgradeTalent('dmg')">+</button>
+            </div>
+            <div class="talent-row">
+                <span>❤️ Sinh lực Bộ Lạc (+20 HP/cấp) — Lv.<b id="t-hp">0</b></span>
+                <button class="talent-btn" onclick="upgradeTalent('hp')">+</button>
+            </div>
+            <div class="talent-row">
+                <span>👟 Tốc độ Di chuyển (+4%/cấp) — Lv.<b id="t-spd">0</b></span>
+                <button class="talent-btn" onclick="upgradeTalent('spd')">+</button>
+            </div>
+            <div class="talent-row">
+                <span>🧲 Tầm hút Nấm (+25px/cấp) — Lv.<b id="t-mag">0</b></span>
+                <button class="talent-btn" onclick="upgradeTalent('mag')">+</button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" style="font-size: 17px; padding: 12px;" onclick="startMatch()">⚔️ BẮT ĐẦU TRẬN ĐẤU (3 PHÚT)</button>
+    </div>
+</div>
+
+<!-- 3. Màn hình Trận Đấu -->
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="hud">
+        <div id="hud-kda">
+            <div class="kda-nums">⚔️ <span id="kda-k">0</span> &nbsp; 💀 <span id="kda-d">0</span> &nbsp; 🛡️ <span id="kda-a">0</span></div>
+            <div style="font-size:12px; color:#feca57; margin-top:2px;">⚖️ Cân nặng: <b id="hud-weight">50</b> Kg (Lv.<span id="hud-lv">1</span>)</div>
+        </div>
+
+        <div id="hud-top-center">
+            <div id="timer-box">03:00</div>
+            <canvas id="radarCanvas" width="84" height="84"></canvas>
+        </div>
+
+        <div id="hud-lb">
+            <h4>🏆 TOP BỘ LẠC</h4>
+            <div id="lb-list"></div>
+        </div>
+
+        <div id="skill-choices"></div>
+
+        <div id="mobile-buttons">
+            <div class="act-btn" id="btn-skl">NHẢY<br><small id="skl-cd" style="font-size:10px;">Sẵn sàng</small></div>
+            <div class="act-btn" id="btn-atk">NỆN</div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Màn hình Tổng Kết Trận -->
+<div id="end-modal">
+    <div class="card" style="width: 380px;">
+        <h2 id="end-title">HẾT GIỜ CHIẾN ĐẤU!</h2>
+        <p id="end-stats" style="margin: 10px 0; font-size: 14px; line-height: 1.6;"></p>
+        <p id="end-exp-gain" style="color: #2ecc71; font-weight: bold; font-size: 16px; margin-bottom: 14px;"></p>
+        <button class="btn btn-primary" onclick="returnToLobby()">VỀ SẢNH CHÍNH</button>
+    </div>
+</div>
+
+<script>
+// ==================== HỆ THỐNG TÀI KHOẢN (LOCALSTORAGE) ====================
+let isRegisterMode = false;
+let currentUser = null;
+let userData = null;
+
+function toggleAuthMode() {
+    isRegisterMode = !isRegisterMode;
+    document.getElementById('auth-title').innerText = isRegisterMode ? 'ĐĂNG KÝ TÀI KHOẢN MỚI' : 'ĐĂNG NHẬP BỘ LẠC';
+    document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'TẠO TÀI KHOẢN & NHẬN BỘ BỘ' : 'VÀO SẢNH';
+    document.getElementById('auth-toggle-btn').innerText = isRegisterMode ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký mới';
+    document.getElementById('auth-msg').innerText = '';
+}
+
+function handleAuth() {
+    const u = document.getElementById('auth-user').value.trim();
+    const p = document.getElementById('auth-pass').value.trim();
+    const msg = document.getElementById('auth-msg');
+
+    if (u.length < 3 || p.length < 3) {
+        msg.innerText = 'Username và Mật khẩu phải từ 3 ký tự trở lên!';
+        return;
+    }
+
+    const db = JSON.parse(localStorage.getItem('barbarq_accounts') || '{}');
+
+    if (isRegisterMode) {
+        if (db[u]) {
+            msg.innerText = 'Tên đăng nhập này đã tồn tại!';
+            return;
+        }
+        db[u] = {
+            password: p,
+            level: 1,
+            exp: 0,
+            nextExp: 100,
+            talentPoints: 0,
+            talents: { dmg: 0, hp: 0, spd: 0, mag: 0 }
+        };
+        localStorage.setItem('barbarq_accounts', JSON.stringify(db));
+        currentUser = u;
+        userData = db[u];
+        enterLobby();
+    } else {
+        if (!db[u] || db[u].password !== p) {
+            msg.innerText = 'Sai tên đăng nhập hoặc mật khẩu!';
+            return;
+        }
+        currentUser = u;
+        userData = db[u];
+        enterLobby();
     }
 }
 
-addScore(pts) {
-    this.score += pts;
-    this.hp = Math.min(this.maxHp, this.hp + 3);
-    if (this.score >= this.nextLevelScore) {
-        this.level++;
-        this.nextLevelScore = Math.floor(this.nextLevelScore * 1.45);
-        this.radius = this.baseRadius + this.level * 2.5; // Nhân vật to dần lên
-        this.maxHp += 20;
+function saveUserData() {
+    if (!currentUser || !userData) return;
+    const db = JSON.parse(localStorage.getItem('barbarq_accounts') || '{}');
+    db[currentUser] = userData;
+    localStorage.setItem('barbarq_accounts', JSON.stringify(db));
+}
+
+function logout() {
+    currentUser = null;
+    userData = null;
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+}
+
+// ==================== SẢNH CHÍNH & CỘNG ĐIỂM KỸ NĂNG ====================
+function enterLobby() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('end-modal').style.display = 'none';
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'flex';
+
+    document.getElementById('lb-username').innerText = currentUser;
+    updateLobbyUI();
+    drawPreviewCharacter();
+}
+
+function updateLobbyUI() {
+    document.getElementById('acc-lv').innerText = userData.level;
+    document.getElementById('acc-exp-text').innerText = `${userData.exp} / ${userData.nextExp} EXP`;
+    document.getElementById('acc-exp-bar').style.width = `${Math.min(100, (userData.exp / userData.nextExp) * 100)}%`;
+
+    document.getElementById('talent-pts').innerText = userData.talentPoints;
+    document.getElementById('t-dmg').innerText = userData.talents.dmg;
+    document.getElementById('t-hp').innerText = userData.talents.hp;
+    document.getElementById('t-spd').innerText = userData.talents.spd;
+    document.getElementById('t-mag').innerText = userData.talents.mag;
+
+    const btns = document.querySelectorAll('.talent-btn');
+    btns.forEach(b => b.disabled = userData.talentPoints <= 0);
+}
+
+function upgradeTalent(type) {
+    if (userData.talentPoints <= 0) return;
+    userData.talentPoints--;
+    userData.talents[type]++;
+    saveUserData();
+    updateLobbyUI();
+}
+
+// Vẽ nhân vật Bộ Bộ chi tiết ở sảnh
+function drawPreviewCharacter() {
+    const pCanvas = document.getElementById('previewCanvas');
+    const pCtx = pCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, 130, 130);
+    renderBarbarianSprite(pCtx, 65, 72, 30, 0, '#e67e22', true, 0, false);
+}
+
+// Hàm vẽ tạo hình Thổ Dân Chibi giống Ngôi Sao Bộ Lạc
+function renderBarbarianSprite(c, x, y, r, angle, clothColor, isBoBo, attackAnim, isHidden) {
+    c.save();
+    c.translate(x, y);
+    if (isHidden) c.globalAlpha = 0.4;
+
+    // Bóng dưới chân
+    c.fillStyle = 'rgba(0,0,0,0.28)';
+    c.beginPath();
+    c.ellipse(0, r * 0.85, r * 0.9, r * 0.45, 0, 0, Math.PI * 2);
+    c.fill();
+
+    // Xoay hướng thân
+    c.save();
+    c.rotate(angle);
+
+    // Hai bàn tay nắm vũ khí
+    const swingOffset = attackAnim > 0 ? (0.5 - attackAnim) * 2.4 : 0;
+    c.save();
+    c.rotate(swingOffset);
+
+    // Vũ khí: Rìu đá thổ dân của Bộ Bộ / Chùy xương của Bot
+    c.fillStyle = '#8e5a2b'; // Cán gỗ
+    c.fillRect(r * 0.4, -4, r * 1.15, 8);
+    // Lưỡi rìu đá sắc bén
+    c.fillStyle = '#dfe6e9';
+    c.beginPath();
+    c.moveTo(r * 1.15, -16);
+    c.lineTo(r * 1.55, -20);
+    c.quadraticCurveTo(r * 1.75, 0, r * 1.55, 20);
+    c.lineTo(r * 1.15, 16);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = '#2d3436';
+    c.lineWidth = 2;
+    c.stroke();
+
+    // Tay phải
+    c.fillStyle = '#ffcc99';
+    c.beginPath();
+    c.arc(r * 0.85, 6, r * 0.28, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    c.restore();
+
+    // Tay trái
+    c.fillStyle = '#ffcc99';
+    c.beginPath();
+    c.arc(r * 0.55, -r * 0.75, r * 0.28, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = '#2d3436';
+    c.lineWidth = 2;
+    c.stroke();
+
+    // Thân & Áo da báo thổ dân
+    c.fillStyle = clothColor;
+    c.beginPath();
+    c.arc(0, 0, r, 0, Math.PI * 2);
+    c.fill();
+    c.lineWidth = 2.5;
+    c.strokeStyle = '#2d3436';
+    c.stroke();
+
+    // Đốm da báo trên áo
+    c.fillStyle = 'rgba(0,0,0,0.35)';
+    c.beginPath(); c.arc(-r*0.4, -r*0.3, r*0.18, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(-r*0.2, r*0.45, r*0.15, 0, Math.PI*2); c.fill();
+
+    // Đầu & Mái tóc xù đặc trưng của Bộ Bộ
+    c.fillStyle = isBoBo ? '#d35400' : '#2d3436';
+    for (let i = 0; i < 8; i++) {
+        const ha = (i / 8) * Math.PI * 2;
+        c.beginPath();
+        c.arc(Math.cos(ha) * (r * 0.65), Math.sin(ha) * (r * 0.65), r * 0.42, 0, Math.PI * 2);
+        c.fill();
+    }
+
+    // Khuôn mặt hướng về trước
+    c.fillStyle = '#ffcc99';
+    c.beginPath();
+    c.arc(r * 0.22, 0, r * 0.62, 0, Math.PI * 2);
+    c.fill();
+
+    // Cặp sừng trắng trên mũ thổ dân
+    c.fillStyle = '#ffffff';
+    c.strokeStyle = '#2d3436';
+    c.lineWidth = 1.8;
+    // Sừng trái
+    c.beginPath();
+    c.moveTo(0, -r * 0.55);
+    c.quadraticCurveTo(r * 0.3, -r * 1.15, r * 0.65, -r * 0.95);
+    c.quadraticCurveTo(r * 0.35, -r * 0.75, r * 0.2, -r * 0.45);
+    c.fill(); c.stroke();
+    // Sừng phải
+    c.beginPath();
+    c.moveTo(0, r * 0.55);
+    c.quadraticCurveTo(r * 0.3, r * 1.15, r * 0.65, r * 0.95);
+    c.quadraticCurveTo(r * 0.35, r * 0.75, r * 0.2, r * 0.45);
+    c.fill(); c.stroke();
+
+    // Đôi mắt biểu cảm quyết tâm
+    c.fillStyle = '#2d3436';
+    c.beginPath(); c.arc(r * 0.52, -r * 0.22, r * 0.13, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(r * 0.52, r * 0.22, r * 0.13, 0, Math.PI * 2); c.fill();
+    // Lòng trắng mắt
+    c.fillStyle = '#fff';
+    c.beginPath(); c.arc(r * 0.55, -r * 0.24, r * 0.05, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(r * 0.55, r * 0.20, r * 0.05, 0, Math.PI * 2); c.fill();
+
+    c.restore();
+    c.restore();
+}
+
+// ==================== LOGIC TRẬN ĐẤU & VÒNG BO PUBG ====================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const radarCanvas = document.getElementById('radarCanvas');
+const rCtx = radarCanvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+});
+
+const WORLD_RADIUS = 1300; // Bán kính bản đồ hình tròn
+const CENTER_X = 1500;
+const CENTER_Y = 1500;
+const MATCH_DURATION = 180; // 3 phút = 180 giây
+
+let gameRunning = false;
+let animFrameId = null;
+let timeLeft = MATCH_DURATION;
+let lastTimestamp = 0;
+let safeZoneRadius = WORLD_RADIUS;
+let zoneDamageTimer = 0;
+
+let mushrooms = [];
+let bushes = [];
+let fighters = [];
+let player = null;
+
+const joystick = { active: false, startX: 0, startY: 0, currX: 0, currY: 0, dx: 0, dy: 0, touchId: null };
+
+const ROGUELITE_SKILLS = [
+    { id: 'spin', name: '🌪️ Chém Xoáy', desc: 'Đánh 360 độ' },
+    { id: 'magnet', name: '🧲 Nam Châm', desc: 'Hút nấm cực xa' },
+    { id: 'lifesteal', name: '🩸 Hút Máu', desc: 'Hồi máu khi chém' },
+    { id: 'speed', name: '⚡ Thần Tốc', desc: '+18% tốc độ' },
+    { id: 'damage', name: '🪓 Rìu Khổng Lồ', desc: '+25% sát thương' }
+];
+
+class Fighter {
+    constructor(name, x, y, clothColor, isPlayer = false) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.clothColor = clothColor;
+        this.isPlayer = isPlayer;
+
+        // Cộng chỉ số thiên phú ngoài sảnh nếu là Player
+        const bonusDmg = isPlayer ? userData.talents.dmg * 5 : 0;
+        const bonusHp = isPlayer ? userData.talents.hp * 20 : 0;
+        const bonusSpd = isPlayer ? userData.talents.spd * 0.18 : 0;
+        const bonusMag = isPlayer ? userData.talents.mag * 25 : 0;
+
+        this.baseRadius = 24;
+        this.radius = 24;
+        this.level = 1;
+        this.weight = 50;
+        this.nextLevelWeight = 100;
+
+        this.maxHp = 120 + bonusHp;
         this.hp = this.maxHp;
-        this.damage += 4;
+        this.speed = 4.2 + bonusSpd;
+        this.damage = 28 + bonusDmg;
+        this.magnetRange = 55 + bonusMag;
+        this.attackRange = 68;
+        this.angle = 0;
+
+        // K/D/A
+        this.kills = 0;
+        this.deaths = 0;
+        this.assists = 0;
+        this.recentAttackers = {}; // Lưu lịch sử gây sát thương để tính Hỗ trợ (Assist)
+
+        this.vx = 0;
+        this.vy = 0;
+        this.attackAnim = 0;
+        this.jumpTimer = 0;
+        this.skillCooldown = 0;
+        this.dead = false;
+        this.inBush = false;
+
+        this.skills = { spin: false, magnet: false, lifesteal: false };
+        this.aiTimer = 0;
+        this.aiDirX = 0;
+        this.aiDirY = 0;
+    }
+
+    update(dt) {
+        if (this.dead) return;
+
+        if (this.attackAnim > 0) this.attackAnim = Math.max(0, this.attackAnim - 0.12);
+        if (this.skillCooldown > 0) this.skillCooldown = Math.max(0, this.skillCooldown - dt);
+
+        // Kiểm tra nấp bụi cỏ
+        this.inBush = bushes.some(b => Math.hypot(this.x - b.x, this.y - b.y) < b.r);
+
+        let moveX = 0, moveY = 0;
         if (this.isPlayer) {
-            showSkillChoices();
+            moveX = joystick.dx;
+            moveY = joystick.dy;
         } else {
-            // Bot tự chọn ngẫu nhiên 1 kỹ năng
-            const randSkill = SKILLS_POOL[Math.floor(Math.random() * SKILLS_POOL.length)].id;
-            applySkill(this, randSkill);
+            this.updateAI();
+            moveX = this.aiDirX;
+            moveY = this.aiDirY;
+        }
+
+        // Kỹ năng Nhảy Bổ Rìu của Bộ Bộ
+        if (this.jumpTimer > 0) {
+            this.jumpTimer--;
+            this.x += Math.cos(this.angle) * (this.speed * 2.9);
+            this.y += Math.sin(this.angle) * (this.speed * 2.9);
+            if (this.jumpTimer === 0) this.attack(true); // Đáp đất bổ rìu mạnh
+        } else if (moveX !== 0 || moveY !== 0) {
+            this.angle = Math.atan2(moveY, moveX);
+            this.x += moveX * this.speed;
+            this.y += moveY * this.speed;
+        }
+
+        // Lực đẩy lùi
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= 0.84;
+        this.vy *= 0.84;
+
+        // Giới hạn không vượt quá mép ngoài bản đồ tròn lớn
+        const distFromCenter = Math.hypot(this.x - CENTER_X, this.y - CENTER_Y);
+        if (distFromCenter > WORLD_RADIUS - this.radius) {
+            const ang = Math.atan2(this.y - CENTER_Y, this.x - CENTER_X);
+            this.x = CENTER_X + Math.cos(ang) * (WORLD_RADIUS - this.radius);
+            this.y = CENTER_Y + Math.sin(ang) * (WORLD_RADIUS - this.radius);
         }
     }
-}
 
-draw() {
-    if (this.dead) return;
+    updateAI() {
+        this.aiTimer--;
+        const distCenter = Math.hypot(this.x - CENTER_X, this.y - CENTER_Y);
+        
+        // Ưu tiên chạy vào vòng bo nếu ở gần mép bo
+        if (distCenter > safeZoneRadius - 120) {
+            const angToCenter = Math.atan2(CENTER_Y - this.y, CENTER_X - this.x);
+            this.aiDirX = Math.cos(angToCenter);
+            this.aiDirY = Math.sin(angToCenter);
+            return;
+        }
 
-    // Vẽ hiệu ứng vung rìu
-    if (this.attackAnim > 0) {
+        let target = null;
+        let minDist = 340;
+        fighters.forEach(f => {
+            if (f !== this && !f.dead && !f.inBush) {
+                const d = Math.hypot(f.x - this.x, f.y - this.y);
+                if (d < minDist) { minDist = d; target = f; }
+            }
+        });
+
+        if (target) {
+            const ang = Math.atan2(target.y - this.y, target.x - this.x);
+            this.aiDirX = Math.cos(ang);
+            this.aiDirY = Math.sin(ang);
+            if (minDist < this.attackRange + this.radius && Math.random() < 0.08) this.attack(false);
+        } else if (this.aiTimer <= 0) {
+            this.aiTimer = 45 + Math.random() * 55;
+            const rAng = Math.random() * Math.PI * 2;
+            this.aiDirX = Math.cos(rAng);
+            this.aiDirY = Math.sin(rAng);
+        }
+    }
+
+    attack(isJumpSmash = false) {
+        if (this.dead || (!isJumpSmash && this.attackAnim > 0.25)) return;
+        this.attackAnim = 1.0;
+
+        const range = (this.attackRange + this.radius) * (this.skills.spin || isJumpSmash ? 1.3 : 1);
+        const dmgMult = isJumpSmash ? 1.45 : 1.0;
+
+        fighters.forEach(target => {
+            if (target === this || target.dead) return;
+            const dx = target.x - this.x;
+            const dy = target.y - this.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist <= range + target.radius) {
+                const angleToTarget = Math.atan2(dy, dx);
+                let diff = Math.abs(angleToTarget - this.angle);
+                if (diff > Math.PI) diff = 2 * Math.PI - diff;
+
+                if (this.skills.spin || isJumpSmash || diff < Math.PI / 2.1) {
+                    const knock = isJumpSmash ? 24 : 16;
+                    target.takeDamage(this.damage * dmgMult, Math.cos(angleToTarget) * knock, Math.sin(angleToTarget) * knock, this);
+                    if (this.skills.lifesteal) {
+                        this.hp = Math.min(this.maxHp, this.hp + this.damage * 0.25);
+                    }
+                }
+            }
+        });
+    }
+
+    useJumpSkill() {
+        if (this.dead || this.skillCooldown > 0 || this.jumpTimer > 0) return;
+        this.skillCooldown = 4.0; // Hồi chiêu 4 giây
+        this.jumpTimer = 11;
+    }
+
+    takeDamage(dmg, kx, ky, attacker) {
+        if (this.dead) return;
+        this.hp -= dmg;
+        this.vx += kx;
+        this.vy += ky;
+
+        if (attacker) {
+            this.recentAttackers[attacker.name] = Date.now();
+        }
+
+        if (this.hp <= 0) {
+            this.dead = true;
+            this.deaths++;
+
+            // Tính mạng Hạ gục (Kill) và Hỗ trợ (Assist)
+            if (attacker) attacker.kills++;
+            const now = Date.now();
+            fighters.forEach(f => {
+                if (f !== attacker && f !== this && this.recentAttackers[f.name] && (now - this.recentAttackers[f.name] < 8000)) {
+                    f.assists++;
+                }
+            });
+            this.recentAttackers = {};
+
+            // Rơi nấm & đùi thịt khi bị hạ gục
+            for (let i = 0; i < this.level * 4 + 3; i++) {
+                spawnMushroom(this.x + (Math.random() - 0.5) * 90, this.y + (Math.random() - 0.5) * 90, true);
+            }
+
+            // Hồi sinh trong vòng bo an toàn sau 3 giây
+            setTimeout(() => {
+                if (!gameRunning) return;
+                const rAng = Math.random() * Math.PI * 2;
+                const rDist = Math.random() * (safeZoneRadius * 0.75);
+                this.x = CENTER_X + Math.cos(rAng) * rDist;
+                this.y = CENTER_Y + Math.sin(rAng) * rDist;
+                this.hp = this.maxHp;
+                this.vx = this.vy = 0;
+                this.dead = false;
+            }, 3000);
+        }
+    }
+
+    addWeight(pts) {
+        this.weight += pts;
+        this.hp = Math.min(this.maxHp, this.hp + 4);
+        if (this.weight >= this.nextLevelWeight) {
+            this.level++;
+            this.nextLevelWeight = Math.floor(this.nextLevelWeight * 1.45);
+            this.radius = this.baseRadius + this.level * 2.2;
+            this.maxHp += 20;
+            this.hp = this.maxHp;
+            this.damage += 4;
+
+            if (this.isPlayer) {
+                showSkillChoices();
+            } else {
+                const rand = ROGUELITE_SKILLS[Math.floor(Math.random() * ROGUELITE_SKILLS.length)].id;
+                applyRogueliteSkill(this, rand);
+            }
+        }
+    }
+
+    draw() {
+        if (this.dead) return;
+        // Ẩn đối thủ trong bụi cỏ nếu người chơi không đứng gần
+        if (!this.isPlayer && this.inBush && Math.hypot(this.x - player.x, this.y - player.y) > 130) return;
+
+        // Hiệu ứng vệt chém rìu
+        if (this.attackAnim > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.attackAnim * 0.45})`;
+            ctx.beginPath();
+            const r = (this.attackRange + this.radius) * (this.skills.spin ? 1.3 : 1);
+            if (this.skills.spin) {
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+            } else {
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, r, this.angle - Math.PI / 2.1, this.angle + Math.PI / 2.1);
+            }
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Vẽ tạo hình nhân vật thổ dân
+        const jumpScale = this.jumpTimer > 0 ? 1.22 : 1.0;
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.attackAnim * 0.45})`;
-        ctx.beginPath();
-        const r = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
-        if (this.skills.spin) {
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-        } else {
-            ctx.moveTo(0, 0);
-            ctx.arc(0, 0, r, this.angle - Math.PI / 2.2, this.angle + Math.PI / 2.2);
-        }
-        ctx.fill();
+        ctx.scale(jumpScale, jumpScale);
+        renderBarbarianSprite(ctx, 0, 0, this.radius, this.angle, this.clothColor, this.isPlayer, this.attackAnim, this.inBush);
         ctx.restore();
+
+        // Tên & Thanh máu
+        ctx.fillStyle = this.isPlayer ? '#f1c40f' : '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Lv.${this.level} ${this.name}`, this.x, this.y - this.radius - 18);
+
+        const barW = 46;
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 13, barW, 6);
+        ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#e74c3c';
+        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 13, barW * (this.hp / this.maxHp), 6);
+    }
+}
+
+function spawnMushroom(x, y, isMeat = false) {
+    if (x === undefined || y === undefined) {
+        const ang = Math.random() * Math.PI * 2;
+        const dist = Math.random() * (safeZoneRadius - 40);
+        x = CENTER_X + Math.cos(ang) * dist;
+        y = CENTER_Y + Math.sin(ang) * dist;
+    }
+    mushrooms.push({
+        x, y,
+        value: isMeat ? 25 : 10,
+        isMeat,
+        color: ['#ff6b6b', '#48dbfb', '#feca57', '#ff9ff3'][Math.floor(Math.random() * 4)]
+    });
+}
+
+function drawMushroomItem(m) {
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    if (m.isMeat) {
+        // Đùi thịt nướng rơi từ địch
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-10, -2, 20, 4);
+        ctx.fillStyle = '#d35400';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 8, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Cây nấm có thân và mũ nấm
+        ctx.fillStyle = '#f5f6fa';
+        ctx.fillRect(-2.5, 0, 5, 6);
+        ctx.fillStyle = m.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 7, Math.PI, 0);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function showSkillChoices() {
+    const box = document.getElementById('skill-choices');
+    box.innerHTML = '';
+    const picks = [...ROGUELITE_SKILLS].sort(() => 0.5 - Math.random()).slice(0, 3);
+    picks.forEach(sk => {
+        const btn = document.createElement('button');
+        btn.className = 'roguelite-btn';
+        btn.innerHTML = `${sk.name}<br><small style="font-weight:normal">${sk.desc}</small>`;
+        btn.onclick = () => {
+            applyRogueliteSkill(player, sk.id);
+            box.style.display = 'none';
+        };
+        box.appendChild(btn);
+    });
+    box.style.display = 'flex';
+}
+
+function applyRogueliteSkill(f, id) {
+    if (id === 'spin') f.skills.spin = true;
+    if (id === 'magnet') f.skills.magnet = true;
+    if (id === 'lifesteal') f.skills.lifesteal = true;
+    if (id === 'speed') f.speed *= 1.18;
+    if (id === 'damage') f.damage *= 1.25;
+}
+
+// ==================== KHỞI TẠO & CHẠY TRẬN ĐẤU ====================
+function startMatch() {
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('end-modal').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    document.getElementById('skill-choices').style.display = 'none';
+
+    timeLeft = MATCH_DURATION;
+    safeZoneRadius = WORLD_RADIUS;
+    mushrooms = [];
+    bushes = [];
+    fighters = [];
+
+    // Tạo bụi cỏ ẩn nấp
+    for (let i = 0; i < 16; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const d = Math.random() * (WORLD_RADIUS - 150);
+        bushes.push({ x: CENTER_X + Math.cos(a) * d, y: CENTER_Y + Math.sin(a) * d, r: 58 });
     }
 
-    // Vẽ thân nhân vật
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
+    // Tạo người chơi & 9 Bot đối thủ
+    player = new Fighter(currentUser, CENTER_X, CENTER_Y, '#e67e22', true);
+    fighters.push(player);
 
-    // Vẽ vũ khí (Cây rìu/chùy hướng theo góc nhìn)
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle + (this.attackAnim > 0 ? (0.5 - this.attackAnim) * 2 : 0));
-    ctx.fillStyle = '#bdc3c7';
-    ctx.fillRect(this.radius - 5, -5, 26, 10);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillRect(this.radius + 14, -12, 10, 24);
-    ctx.restore();
+    const BOT_NAMES = ['Lạc Lạc', 'Mu Mu', 'Nện Nện', 'Bóng Bóng', 'Ka Ka', 'Tù Trưởng', 'Sói Đêm', 'Báo Đốm', 'Gấu Núi'];
+    const COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#2ecc71', '#fd79a8', '#6c5ce7', '#00cec9', '#fab1a0'];
+    for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2;
+        const d = 350 + Math.random() * 600;
+        fighters.push(new Fighter(BOT_NAMES[i], CENTER_X + Math.cos(a) * d, CENTER_Y + Math.sin(a) * d, COLORS[i], false));
+    }
 
-    // Tên & Thanh máu trên đầu
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`Lv.${this.level} ${this.name}`, this.x, this.y - this.radius - 16);
+    for (let i = 0; i < 110; i++) spawnMushroom();
 
-    const barW = 44;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(this.x - barW / 2, this.y - this.radius - 12, barW, 6);
-    ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#e74c3c';
-    ctx.fillRect(this.x - barW / 2, this.y - this.radius - 12, barW * (this.hp / this.maxHp), 6);
-}
+    gameRunning = true;
+    lastTimestamp = performance.now();
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    animFrameId = requestAnimationFrame(gameLoop);
 }
 
-// Khởi tạo dữ liệu game
-let mushrooms = [];
-let fighters = [];
-const player = new Fighter('Bộ Bộ (Bạn)', MAP_SIZE / 2, MAP_SIZE / 2, '#f1c40f', true);
-fighters.push(player);
+function endMatch() {
+    gameRunning = false;
+    const sorted = [...fighters].sort((a, b) => b.weight - a.weight);
+    const rank = sorted.findIndex(f => f === player) + 1;
 
-const BOT_NAMES = ['Lạc Lạc', 'Mu Mu', 'Nện Nện', 'Bóng Bóng', 'Ka Ka', 'Tù Trưởng', 'Thổ Dân', 'Sói Hoang', 'Gấu Đen', 'Báo Đốm'];
-const BOT_COLORS = ['#e74c3c', '#9b59b6', '#3498db', '#1abc9c', '#e67e22', '#ff7979', '#badc58', '#686de0'];
+    // Tính EXP nhận được sau trận
+    const expGain = Math.floor(player.weight * 0.4 + player.kills * 25 + player.assists * 10 + (rank === 1 ? 80 : 30));
+    userData.exp += expGain;
+    let leveledUp = false;
+    while (userData.exp >= userData.nextExp) {
+        userData.exp -= userData.nextExp;
+        userData.level++;
+        userData.talentPoints++;
+        userData.nextExp = Math.floor(userData.nextExp * 1.35);
+        leveledUp = true;
+    }
+    saveUserData();
 
-for (let i = 0; i < BOT_COUNT; i++) {
-    fighters.push(new Fighter(
-        BOT_NAMES[i % BOT_NAMES.length],
-        Math.random() * MAP_SIZE,
-        Math.random() * MAP_SIZE,
-        BOT_COLORS[i % BOT_COLORS.length]
-    ));
+    document.getElementById('end-title').innerText = rank === 1 ? '🏆 TOP 1 TÙ TRƯỞNG VĨ ĐẠI!' : `HẠNG #${rank} TRẬN ĐẤU`;
+    document.getElementById('end-stats').innerHTML = `
+        Cân nặng đạt được: <b>${player.weight} Kg</b> (Cấp ${player.level})<br>
+        Thành tích: <b>${player.kills} Giết</b> / <b>${player.deaths} Chết</b> / <b>${player.assists} Hỗ trợ</b>
+    `;
+    document.getElementById('end-exp-gain').innerText = `+${expGain} EXP Tài Khoản ${leveledUp ? '(🎉 LÊN CẤP MỚI! Có điểm cộng Skill)' : ''}`;
+    document.getElementById('end-modal').style.display = 'flex';
 }
 
-function respawnBot(bot) {
-    bot.x = Math.random() * MAP_SIZE;
-    bot.y = Math.random() * MAP_SIZE;
-    bot.hp = bot.maxHp;
-    bot.dead = false;
+function returnToLobby() {
+    enterLobby();
 }
 
-function spawnMushroom(x = Math.random() * MAP_SIZE, y = Math.random() * MAP_SIZE, isBig = false) {
-    mushrooms.push({
-        x: Math.max(20, Math.min(MAP_SIZE - 20, x)),
-        y: Math.max(20, Math.min(MAP_SIZE - 20, y)),
-        value: isBig ? 20 : 10,
-        radius: isBig ? 9 : 6,
-        color: isBig ? '#ff9ff3' : ['#ff6b6b', '#48dbfb', '#1dd1a1', '#feca57'][Math.floor(Math.random() * 4)]
+// ==================== VẼ RADAR BẢN ĐỒ NHIỆT ====================
+function drawRadar() {
+    const rSize = 84;
+    const half = rSize / 2;
+    rCtx.clearRect(0, 0, rSize, rSize);
+
+    // Nền radar & vòng bo thu hẹp trên radar
+    rCtx.fillStyle = 'rgba(20, 30, 20, 0.8)';
+    rCtx.beginPath();
+    rCtx.arc(half, half, half - 2, 0, Math.PI * 2);
+    rCtx.fill();
+
+    const boScale = (safeZoneRadius / WORLD_RADIUS) * (half - 2);
+    rCtx.strokeStyle = '#ff4757';
+    rCtx.lineWidth = 1.5;
+    rCtx.beginPath();
+    rCtx.arc(half, half, boScale, 0, Math.PI * 2);
+    rCtx.stroke();
+
+    // Vẽ đốm nhiệt vị trí địch (Đỏ) và người chơi (Xanh lá/Vàng)
+    fighters.forEach(f => {
+        if (f.dead) return;
+        const rx = half + ((f.x - CENTER_X) / WORLD_RADIUS) * (half - 4);
+        const ry = half + ((f.y - CENTER_Y) / WORLD_RADIUS) * (half - 4);
+
+        if (f.isPlayer) {
+            rCtx.fillStyle = '#2ecc71';
+            rCtx.beginPath();
+            rCtx.arc(rx, ry, 3.5, 0, Math.PI * 2);
+            rCtx.fill();
+        } else {
+            // Hiệu ứng bản đồ nhiệt (vùng đỏ mờ xung quanh địch)
+            const grad = rCtx.createRadialGradient(rx, ry, 1, rx, ry, 8);
+            grad.addColorStop(0, 'rgba(255, 71, 87, 0.95)');
+            grad.addColorStop(1, 'rgba(255, 71, 87, 0)');
+            rCtx.fillStyle = grad;
+            rCtx.beginPath();
+            rCtx.arc(rx, ry, 8, 0, Math.PI * 2);
+            rCtx.fill();
+        }
     });
 }
 
-for (let i = 0; i < MUSHROOM_COUNT; i++) spawnMushroom();
-
-// Hệ thống chọn kỹ năng
-function showSkillChoices() {
-    const modal = document.getElementById('skill-modal');
-    modal.innerHTML = '';
-    const shuffled = [...SKILLS_POOL].sort(() => 0.5 - Math.random()).slice(0, 3);
-    shuffled.forEach(skill => {
-        const btn = document.createElement('button');
-        btn.className = 'skill-btn';
-        btn.innerHTML = `${skill.name}<br><small style="font-weight:normal">${skill.desc}</small>`;
-        btn.onclick = () => {
-            applySkill(player, skill.id);
-            modal.style.display = 'none';
-        };
-        modal.appendChild(btn);
-    });
-    modal.style.display = 'flex';
-}
-
-function applySkill(fighter, skillId) {
-    if (skillId === 'spin') fighter.skills.spin = true;
-    if (skillId === 'magnet') fighter.skills.magnet = true;
-    if (skillId === 'lifesteal') fighter.skills.lifesteal = true;
-    if (skillId === 'speed') fighter.speed *= 1.2;
-    if (skillId === 'damage') fighter.damage *= 1.25;
-}
-
-// --- ĐIỀU KHIỂN CẢM ỨNG & BÀN PHÍM ---
+// ==================== ĐIỀU KHIỂN CẢM ỨNG & BÀN PHÍM ====================
 canvas.addEventListener('touchstart', e => {
     for (let t of e.changedTouches) {
         if (t.clientX < width / 2 && !joystick.active) {
@@ -157,7 +948,6 @@ canvas.addEventListener('touchstart', e => {
         }
     }
 });
-
 canvas.addEventListener('touchmove', e => {
     for (let t of e.changedTouches) {
         if (joystick.active && t.identifier === joystick.touchId) {
@@ -166,7 +956,7 @@ canvas.addEventListener('touchmove', e => {
             const dx = joystick.currX - joystick.startX;
             const dy = joystick.currY - joystick.startY;
             const dist = Math.hypot(dx, dy);
-            const maxR = 45;
+            const maxR = 48;
             if (dist > 0) {
                 joystick.dx = (dx / dist) * Math.min(dist / maxR, 1);
                 joystick.dy = (dy / dist) * Math.min(dist / maxR, 1);
@@ -174,7 +964,6 @@ canvas.addEventListener('touchmove', e => {
         }
     }
 });
-
 canvas.addEventListener('touchend', e => {
     for (let t of e.changedTouches) {
         if (t.identifier === joystick.touchId) {
@@ -184,26 +973,20 @@ canvas.addEventListener('touchend', e => {
     }
 });
 
-// Nút bấm UI trên màn hình
-document.getElementById('btn-attack').addEventListener('touchstart', e => { e.preventDefault(); player.attack(); });
-document.getElementById('btn-attack').addEventListener('mousedown', () => player.attack());
-document.getElementById('btn-dash').addEventListener('touchstart', e => { e.preventDefault(); player.dash(); });
-document.getElementById('btn-dash').addEventListener('mousedown', () => player.dash());
+document.getElementById('btn-atk').addEventListener('touchstart', e => { e.preventDefault(); if (player) player.attack(false); });
+document.getElementById('btn-atk').addEventListener('mousedown', () => { if (player) player.attack(false); });
+document.getElementById('btn-skl').addEventListener('touchstart', e => { e.preventDefault(); if (player) player.useJumpSkill(); });
+document.getElementById('btn-skl').addEventListener('mousedown', () => { if (player) player.useJumpSkill(); });
 
-// Hỗ trợ test trên máy tính bằng phím WASD + Space/J
 const keys = {};
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
-    if (e.code === 'KeyJ' || e.code === 'Enter') player.attack();
-    if (e.code === 'Space') player.dash();
-    updateKeyJoystick();
+    if (e.code === 'KeyJ' && player) player.attack(false);
+    if (e.code === 'Space' && player) player.useJumpSkill();
+    updateKeyJoy();
 });
-window.addEventListener('keyup', e => {
-    keys[e.code] = false;
-    updateKeyJoystick();
-});
-
-function updateKeyJoystick() {
+window.addEventListener('keyup', e => { keys[e.code] = false; updateKeyJoy(); });
+function updateKeyJoy() {
     let x = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
     let y = (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) - (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0);
     const len = Math.hypot(x, y);
@@ -211,74 +994,147 @@ function updateKeyJoystick() {
     joystick.dy = len > 0 ? y / len : 0;
 }
 
-// --- VÒNG LẶP CHÍNH CỦA GAME ---
-function gameLoop() {
-    ctx.clearRect(0, 0, width, height);
+// ==================== VÒNG LẶP CHÍNH TRẬN ĐẤU ====================
+function gameLoop(timestamp) {
+    if (!gameRunning) return;
+    const dt = Math.min(0.1, (timestamp - lastTimestamp) / 1000);
+    lastTimestamp = timestamp;
 
-    // Camera bám theo người chơi
+    // 1. Đếm ngược 3 phút & Thu hẹp vòng bo hình tròn
+    timeLeft -= dt;
+    if (timeLeft <= 0) {
+        timeLeft = 0;
+        endMatch();
+        return;
+    }
+    // Vòng bo thu nhỏ dần từ 1300px về 220px trong suốt 3 phút
+    const progress = 1 - (timeLeft / MATCH_DURATION);
+    safeZoneRadius = WORLD_RADIUS - progress * (WORLD_RADIUS - 220);
+
+    // Sát thương ngoài vòng bo (mỗi giây mất máu nếu đứng ngoài vòng bo)
+    zoneDamageTimer += dt;
+    if (zoneDamageTimer >= 1.0) {
+        zoneDamageTimer = 0;
+        fighters.forEach(f => {
+            if (!f.dead && Math.hypot(f.x - CENTER_X, f.y - CENTER_Y) > safeZoneRadius) {
+                f.takeDamage(12, 0, 0, null);
+            }
+        });
+    }
+
+    ctx.clearRect(0, 0, width, height);
     const camX = player.x - width / 2;
     const camY = player.y - height / 2;
 
     ctx.save();
     ctx.translate(-camX, -camY);
 
-    // Vẽ nền bãi cỏ bộ lạc & lưới tọa độ
-    ctx.fillStyle = '#4cd137';
-    ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-    ctx.lineWidth = 2;
-    for (let x = 0; x <= MAP_SIZE; x += 100) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
-    }
-    for (let y = 0; y <= MAP_SIZE; y += 100) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
-    }
+    // Nền ngoài bản đồ (Vùng nguy hiểm tối màu)
+    ctx.fillStyle = '#1e272e';
+    ctx.fillRect(CENTER_X - WORLD_RADIUS - 600, CENTER_Y - WORLD_RADIUS - 600, (WORLD_RADIUS + 600) * 2, (WORLD_RADIUS + 600) * 2);
 
-    // Viền bản đồ
-    ctx.strokeStyle = '#c23616';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
+    // Bãi cỏ đấu trường hình tròn
+    ctx.fillStyle = '#55efc4';
+    ctx.beginPath();
+    ctx.arc(CENTER_X, CENTER_Y, WORLD_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Vùng ngoài vòng bo an toàn phủ lớp sương đỏ cảnh báo
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CENTER_X, CENTER_Y, WORLD_RADIUS, 0, Math.PI * 2);
+    ctx.arc(CENTER_X, CENTER_Y, safeZoneRadius, 0, Math.PI * 2, true);
+    ctx.fillStyle = 'rgba(255, 71, 87, 0.35)';
+    ctx.fill();
+    ctx.restore();
+
+    // Đường viền vòng bo an toàn
+    ctx.strokeStyle = '#ff4757';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(CENTER_X, CENTER_Y, safeZoneRadius, 0, Math.PI * 2);
+    ctx.stroke();
 
     // Cập nhật & Vẽ Nấm
     for (let i = mushrooms.length - 1; i >= 0; i--) {
         const m = mushrooms[i];
-
-        // Kiểm tra hút nấm hoặc ăn nấm
         let eaten = false;
         for (let f of fighters) {
             if (f.dead) continue;
             const d = Math.hypot(f.x - m.x, f.y - m.y);
-            if (f.skills.magnet && d < 180) {
-                m.x += (f.x - m.x) * 0.12;
-                m.y += (f.y - m.y) * 0.12;
+            const magR = f.skills.magnet ? f.magnetRange + 130 : f.magnetRange;
+            if (d < magR) {
+                m.x += (f.x - m.x) * 0.14;
+                m.y += (f.y - m.y) * 0.14;
             }
-            if (d < f.radius + m.radius) {
-                f.addScore(m.value);
+            if (d < f.radius + 8) {
+                f.addWeight(m.value);
                 eaten = true;
                 break;
             }
         }
-
         if (eaten) {
             mushrooms.splice(i, 1);
-            if (mushrooms.length < MUSHROOM_COUNT) spawnMushroom();
+            if (mushrooms.length < 110) spawnMushroom();
             continue;
         }
-
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
-        ctx.fillStyle = m.color;
-        ctx.fill();
+        drawMushroomItem(m);
     }
 
     // Cập nhật & Vẽ Nhân vật
-    fighters.forEach(f => { f.update(); f.draw(); });
+    fighters.forEach(f => { f.update(dt); f.draw(); });
+
+    // Vẽ bụi cỏ ẩn nấp (đè lên nhân vật để tạo hiệu ứng nấp)
+    bushes.forEach(b => {
+        ctx.fillStyle = 'rgba(0, 148, 50, 0.85)';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#006266';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    });
 
     ctx.restore();
 
-    // Vẽ Joystick ảo trên màn hình khi chạm
+    // Vẽ Joystick cảm ứng bên trái
     if (joystick.active) {
         ctx.beginPath();
-        ctx.arc(joystick.startX, joystick.startY, 45, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.arc(joystick.startX, joystick.startY, 48, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(joystick.startX + joystick.dx * 48, joystick.startY + joystick.dy * 48, 22, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(241, 196, 15, 0.75)';
+        ctx.fill();
+    }
+
+    // Cập nhật HUD
+    const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const secs = String(Math.floor(timeLeft % 60)).padStart(2, '0');
+    const timerEl = document.getElementById('timer-box');
+    timerEl.innerText = `${mins}:${secs}`;
+    timerEl.style.color = timeLeft <= 30 ? '#ff4757' : '#f1c40f';
+
+    document.getElementById('kda-k').innerText = player.kills;
+    document.getElementById('kda-d').innerText = player.deaths;
+    document.getElementById('kda-a').innerText = player.assists;
+    document.getElementById('hud-weight').innerText = player.weight;
+    document.getElementById('hud-lv').innerText = player.level;
+
+    document.getElementById('skl-cd').innerText = player.skillCooldown > 0 ? `${player.skillCooldown.toFixed(1)}s` : 'Sẵn sàng';
+
+    const top5 = [...fighters].sort((a, b) => b.weight - a.weight).slice(0, 5);
+    document.getElementById('lb-list').innerHTML = top5
+        .map((f, i) => `<div style="color:${f.isPlayer ? '#2ecc71' : '#fff'}">${i + 1}. ${f.name}: <b>${f.weight}Kg</b></div>`).join('');
+
+    drawRadar();
+    animFrameId = requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
