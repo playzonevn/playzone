@@ -615,6 +615,10 @@ function openGame(i){
   for(let c=0;c<7;c++)cell(b,"↓",()=>{if(done)return;let r=5;while(r>=0&&a[r*7+c])r--;if(r<0)return;let j=r*7+c;a[j]=turn;b.children[j].textContent=turn;if(win(j)){done=true;say(turn+" wins!")}else if(a.every(Boolean)){done=true;say("Draw!")}else turn=turn==="🔴"?"🟡":"🔴";});
   btn("↻ Restart",again);
  }
+  // 17 ĐẤU TRƯỜNG BỘ LẠC
+ if(i===16){
+  window.location.href = "dau-truong-bo-lac.html";
+ }
 }
  
 const pageData = {
