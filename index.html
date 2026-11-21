@@ -441,10 +441,19 @@ function drawGrid(){
  games.forEach((g,i)=>{
   let name=english?g[3]:g[1],desc=english?g[3]:g[2];
   if(!(name+" "+desc).toLowerCase().includes(search.value.toLowerCase()))return;
-  let card=document.createElement("div");card.className="game-card";
-  card.innerHTML=`${i===16 ? '<img src="cover-bo-lac.png" style="width:100%;height:95px;object-fit:cover;border-radius:10px;margin-bottom:10px;">' : `<div class="emoji">${g[0]}</div>`}
-<h3>${name}</h3><p>${desc}</p><span class="play">${english?"▶ PLAY NOW":"▶ CHƠI NGAY"}</span>`;
-  card.onclick=()=>openGame(i);grid.appendChild(card);
+  if(activeCategory !== "All" && gameCategories[i] !== activeCategory)return;
+
+  let card=document.createElement("div");
+  card.className="game-card";
+
+  // Hiển thị ảnh bìa cho game Đấu Trường Bộ Lạc (i === 16), các game khác giữ nguyên emoji
+  let mediaHtml = (i === 16)
+    ? `<img src="cover-bo-lac.png" alt="${name}" style="width:100%; height:95px; object-fit:cover; border-radius:10px; margin-bottom:12px; display:block; border:1px solid var(--line);">`
+    : `<div class="emoji">${g[0]}</div>`;
+
+  card.innerHTML=`${mediaHtml}<h3>${name}</h3><p>${desc}</p><span class="play">${english?"▶ PLAY NOW":"▶ CHƠI NGAY"}</span>`;
+  card.onclick=()=>openGame(i);
+  grid.appendChild(card);
  });
 }
 search.oninput=drawGrid;
