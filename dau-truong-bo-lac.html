@@ -3,74 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ngôi Sao Bộ Lạc - Full RPG & Battle</title>
+    <title>Ngôi Sao Bộ Lạc - Battle Royale</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #1e272e; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        /* MÀN HÌNH TẠO TÀI KHOẢN */
-        #register-screen {
+
+        /* CẢNH BÁO XOAY NGANG ĐIỆN THOẠI */
+        #rotate-warning {
+            display: none; position: fixed; inset: 0; background: #1e272e; color: #f1c40f;
+            z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
+        }
+        #rotate-warning .phone-icon { font-size: 60px; animation: rotatePhone 1.5s infinite ease-in-out; margin-bottom: 15px; }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+
+        @media screen and (orientation: portrait) {
+            #rotate-warning { display: flex; }
+        }
+
+        /* MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ */
+        #auth-screen {
             position: fixed; inset: 0; background: linear-gradient(135deg, #2ecc71, #27ae60);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: white; padding: 20px;
+            display: flex; align-items: center; justify-content: center; z-index: 100; color: white; padding: 15px;
         }
         .card-box {
-            background: rgba(0, 0, 0, 0.65); padding: 25px; border-radius: 16px; border: 3px solid #f1c40f;
-            max-width: 380px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.72); padding: 20px 25px; border-radius: 16px; border: 3px solid #f1c40f;
+            max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .card-box h1 { color: #f1c40f; font-size: 24px; margin-bottom: 10px; text-transform: uppercase; }
+        .card-box h1 { color: #f1c40f; font-size: 22px; margin-bottom: 8px; text-transform: uppercase; }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 12px; }
+        .auth-tab {
+            flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #f1c40f; background: transparent;
+            color: #fff; font-weight: bold; cursor: pointer;
+        }
+        .auth-tab.active { background: #f1c40f; color: #1e272e; }
         .card-box input {
-            width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 2px solid #fff;
-            font-size: 16px; text-align: center; font-weight: bold; outline: none;
+            width: 100%; padding: 10px 12px; margin: 6px 0; border-radius: 8px; border: 2px solid #fff;
+            font-size: 14px; font-weight: bold; outline: none;
         }
-        .gift-banner {
-            background: rgba(241, 196, 15, 0.2); border: 1px dashed #f1c40f; padding: 10px;
-            border-radius: 10px; margin-bottom: 15px; font-size: 13px; color: #ffeaa7;
-        }
+        #auth-msg { color: #ff7675; font-size: 12px; min-height: 18px; margin: 4px 0; font-weight: bold; }
         .btn-primary {
-            width: 100%; padding: 14px; font-size: 18px; font-weight: bold; background: linear-gradient(180deg, #f39c12, #d35400);
-            color: white; border: 2px solid #fff; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 #a04000;
+            width: 100%; padding: 11px; font-size: 16px; font-weight: bold; background: linear-gradient(180deg, #f39c12, #d35400);
+            color: white; border: 2px solid #fff; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #a04000; margin-top: 6px;
         }
         .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 #a04000; }
 
         /* MÀN HÌNH SẢNH CHÍNH (LOBBY) */
         #lobby-screen {
             display: none; position: fixed; inset: 0; background: linear-gradient(180deg, #2980b9, #6dd5fa);
-            flex-direction: column; justify-content: space-between; z-index: 90; color: white; padding: 15px;
+            flex-direction: column; justify-content: space-between; z-index: 90; color: white; padding: 12px 20px;
         }
         .lobby-header {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.55); padding: 8px 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);
         }
-        .exp-bar-wrap { width: 140px; height: 12px; background: #333; border-radius: 6px; overflow: hidden; margin-top: 4px; border: 1px solid #fff; }
+        .exp-bar-wrap { width: 150px; height: 10px; background: #333; border-radius: 6px; overflow: hidden; margin-top: 4px; border: 1px solid #fff; }
         .exp-bar-fill { height: 100%; background: #2ecc71; width: 0%; transition: width 0.3s; }
-        
+        .btn-logout {
+            background: #e74c3c; color: white; border: 1px solid #fff; padding: 5px 10px;
+            border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; margin-left: 10px;
+        }
+
         .lobby-body {
-            display: flex; flex: 1; gap: 15px; margin: 12px 0; overflow: hidden; align-items: center; justify-content: center;
+            display: flex; flex: 1; gap: 15px; margin: 10px 0; overflow: hidden; align-items: center; justify-content: center;
         }
         .hero-preview {
-            flex: 1; max-width: 240px; height: 100%; background: rgba(0,0,0,0.4); border-radius: 16px;
-            border: 2px solid #f1c40f; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px;
+            flex: 1; max-width: 230px; height: 100%; background: rgba(0,0,0,0.45); border-radius: 14px;
+            border: 2px solid #f1c40f; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px;
         }
         .skill-tree-panel {
-            flex: 1.5; max-width: 420px; height: 100%; background: rgba(0,0,0,0.55); border-radius: 16px;
-            border: 2px solid rgba(255,255,255,0.3); padding: 12px; display: flex; flex-direction: column; overflow-y: auto;
+            flex: 1.6; max-width: 460px; height: 100%; background: rgba(0,0,0,0.55); border-radius: 14px;
+            border: 2px solid rgba(255,255,255,0.3); padding: 10px 14px; display: flex; flex-direction: column; overflow-y: auto;
         }
-        .skill-tree-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 6px; }
+        .skill-tree-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px; }
         .talent-item {
             display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1);
-            padding: 8px 12px; border-radius: 10px; margin-bottom: 8px;
+            padding: 6px 10px; border-radius: 8px; margin-bottom: 6px;
         }
-        .talent-info h4 { font-size: 14px; color: #f1c40f; }
+        .talent-info h4 { font-size: 13px; color: #f1c40f; }
         .talent-info p { font-size: 11px; color: #dfe6e9; }
         .btn-plus {
-            width: 34px; height: 34px; border-radius: 8px; border: 2px solid #fff; background: #2ecc71;
-            color: white; font-weight: bold; font-size: 18px; cursor: pointer;
+            width: 30px; height: 30px; border-radius: 6px; border: 2px solid #fff; background: #2ecc71;
+            color: white; font-weight: bold; font-size: 16px; cursor: pointer;
         }
         .btn-plus:disabled { background: #7f8c8d; border-color: #95a5a6; cursor: not-allowed; opacity: 0.6; }
 
-        .lobby-footer { display: flex; justify-content: center; gap: 15px; }
+        .lobby-footer { display: flex; justify-content: center; }
         .btn-battle {
-            padding: 14px 45px; font-size: 20px; font-weight: bold; background: linear-gradient(180deg, #e74c3c, #c0392b);
+            padding: 10px 45px; font-size: 18px; font-weight: bold; background: linear-gradient(180deg, #e74c3c, #c0392b);
             color: white; border: 3px solid #f1c40f; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
 
@@ -79,60 +98,69 @@
         canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         #ui-layer { position: absolute; inset: 0; pointer-events: none; }
 
-        /* Góc trên trái: Giết / Chết / Hỗ trợ & Cân nặng */
+        /* Góc trên trái: KDA & Cân nặng */
         #kda-panel {
             position: absolute; top: 10px; left: 10px;
-            background: rgba(0, 0, 0, 0.55); color: white;
-            padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
-            font-size: 14px; display: flex; flex-direction: column; gap: 4px;
+            background: rgba(0, 0, 0, 0.6); color: white;
+            padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 13px; display: flex; flex-direction: column; gap: 3px;
         }
-        .kda-row { display: flex; gap: 12px; font-weight: bold; align-items: center; }
-        .weight-text { color: #f1c40f; font-size: 13px; font-weight: bold; }
+        .kda-row { display: flex; gap: 10px; font-weight: bold; align-items: center; }
+        .weight-text { color: #f1c40f; font-size: 12px; font-weight: bold; }
 
-        /* Chính giữa trên: Đồng hồ đếm ngược */
-        #timer-box {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6); color: #fff; padding: 6px 18px;
-            border-radius: 20px; border: 2px solid #f1c40f; font-size: 20px; font-weight: bold;
-            display: flex; align-items: center; gap: 6px;
+        /* Chính giữa trên: Bản đồ nhiệt (Radar) + Đồng hồ 3 phút */
+        #top-center-hud {
+            position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: flex-start; gap: 10px;
         }
+        #heatmap-wrap {
+            background: rgba(0, 0, 0, 0.65); border: 2px solid #f1c40f; border-radius: 50%;
+            padding: 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #heatmapCanvas { display: block; border-radius: 50%; width: 84px; height: 84px; }
+        #timer-box {
+            background: rgba(0, 0, 0, 0.65); color: #fff; padding: 6px 14px;
+            border-radius: 18px; border: 2px solid #f1c40f; font-size: 18px; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #zone-status { font-size: 10px; color: #ff7675; font-weight: bold; }
         .timer-urgent { color: #ff4757 !important; border-color: #ff4757 !important; animation: pulse 0.8s infinite; }
-        @keyframes pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.08); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
         /* Góc trên phải: Bảng xếp hạng */
         #leaderboard {
             position: absolute; top: 10px; right: 10px;
-            background: rgba(0, 0, 0, 0.5); color: white;
-            padding: 8px 10px; border-radius: 8px; font-size: 12px; min-width: 145px;
+            background: rgba(0, 0, 0, 0.55); color: white;
+            padding: 6px 10px; border-radius: 8px; font-size: 11px; min-width: 140px;
         }
-        #leaderboard h4 { color: #f1c40f; text-align: center; margin-bottom: 4px; font-size: 12px; }
+        #leaderboard h4 { color: #f1c40f; text-align: center; margin-bottom: 3px; font-size: 11px; }
 
-        /* Bảng chọn 3 kỹ năng Roguelite trong trận */
+        /* Bảng chọn 3 kỹ năng Roguelite */
         #skill-modal {
-            display: none; position: absolute; bottom: 115px; left: 50%; transform: translateX(-50%);
+            display: none; position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
             gap: 10px; pointer-events: auto; z-index: 20;
         }
         .skill-btn {
             background: linear-gradient(135deg, #f39c12, #d35400);
-            border: 2px solid #fff; border-radius: 12px; color: white;
-            padding: 8px 12px; font-weight: bold; font-size: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; text-align: center; min-width: 100px;
+            border: 2px solid #fff; border-radius: 10px; color: white;
+            padding: 7px 10px; font-weight: bold; font-size: 11px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; text-align: center; min-width: 95px;
         }
 
-        /* Hàng icon kỹ năng đã học ở giữa dưới */
+        /* Hàng icon kỹ năng đã học */
         #learned-skills-bar {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 6px; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 20px;
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; background: rgba(0,0,0,0.45); padding: 4px 8px; border-radius: 16px;
         }
         .learned-icon {
-            width: 32px; height: 32px; border-radius: 50%; background: #2c3e50; border: 2px solid #f1c40f;
-            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            width: 28px; height: 28px; border-radius: 50%; background: #2c3e50; border: 2px solid #f1c40f;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
 
-        /* Cụm nút bên phải: Đánh thường (lớn) + Kỹ năng đặc trưng (nhỏ hơn bên cạnh) */
+        /* Cụm nút bên phải */
         #controls-right {
-            position: absolute; bottom: 22px; right: 22px; pointer-events: auto;
-            width: 155px; height: 135px;
+            position: absolute; bottom: 18px; right: 20px; pointer-events: auto;
+            width: 145px; height: 125px;
         }
         .action-btn {
             border-radius: 50%; border: 3px solid rgba(255,255,255,0.85);
@@ -141,895 +169,890 @@
         }
         .action-btn:active { transform: scale(0.92); }
         #btn-attack {
-            width: 84px; height: 84px; right: 0; bottom: 0;
-            background: radial-gradient(circle, #ff6b6b, #c0392b); font-size: 16px;
+            width: 80px; height: 80px; right: 0; bottom: 0;
+            background: radial-gradient(circle, #ff6b6b, #c0392b); font-size: 15px;
         }
         #btn-skill {
-            width: 64px; height: 64px; left: 0; bottom: 18px;
-            background: radial-gradient(circle, #3498db, #2980b9); font-size: 13px;
-        }
-        #skill-cd-overlay {
-            position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.65);
-            display: none; align-items: center; justify-content: center; font-size: 16px; color: #f1c40f;
-        }
+            width: 60px; height: 60px; left: 0; bottom: 15px;
+background: radial-gradient(circle, #3498db, #2980b9); font-size: 12px;
+}
+#skill-cd-overlay {
+position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.65);
+display: none; align-items: center; justify-content: center; font-size: 15px; color: #f1c40f;
+}
 
-        /* Màn hình Tổng kết trận */
-        #match-end-screen {
-            display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.82);
-            flex-direction: column; align-items: center; justify-content: center; color: white; pointer-events: auto; z-index: 50;
-        }
-        .summary-card {
-            background: #2c3e50; border: 3px solid #f1c40f; border-radius: 16px; padding: 22px;
-            text-align: center; max-width: 340px; width: 90%;
-        }
-    </style>
-</head>
-<body>
 
-<!-- 1. MÀN HÌNH TẠO TÀI KHOẢN -->
-<div id="register-screen">
-    <div class="card-box">
-        <h1>Ngôi Sao Bộ Lạc</h1>
-        <p style="font-size: 13px; color: #dfe6e9;">Nhập tên Nện Thủ của bạn để gia nhập bộ lạc</p>
-        <input type="text" id="input-username" placeholder="Nhập tên nhân vật..." maxlength="14" value="Bộ Bộ Tân Thủ">
-        <div class="gift-banner">
-            🎁 <b>QUÀ TÂN THỦ LEVEL 1:</b><br>
-            Tặng miễn phí tướng khởi đầu <b>BỘ BỘ</b> + Rìu Đá!
-        </div>
-        <button class="btn-primary" onclick="createAccount()">TẠO TÀI KHOẢN & NHẬN QUÀ</button>
-    </div>
-</div>
+/* Màn hình Tổng kết trận */
+#match-end-screen {
+display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+flex-direction: column; align-items: center; justify-content: center; color: white; pointer-events: auto; z-index: 50;
+}
+.summary-card {
+background: #2c3e50; border: 3px solid #f1c40f; border-radius: 16px; padding: 20px;
+text-align: center; max-width: 340px; width: 90%;
+}
 
-<!-- 2. MÀN HÌNH SẢNH CHÍNH & CỘNG KỸ NĂNG NGOÀI SẢNH -->
-<div id="lobby-screen">
-    <div class="lobby-header">
-        <div>
-            <div style="font-weight: bold; font-size: 16px; color: #f1c40f;" id="lobby-name">Bộ Bộ</div>
-            <div style="font-size: 12px;">Tài khoản Lv.<b id="lobby-level">1</b> (<span id="lobby-exp">0</span>/<span id="lobby-max-exp">100</span> EXP)</div>
-            <div class="exp-bar-wrap"><div class="exp-bar-fill" id="lobby-exp-bar"></div></div>
-        </div>
-        <div style="text-align: right;">
-            <div style="font-size: 12px; color: #ffeaa7;">Tướng đang chọn</div>
-            <div style="font-weight: bold; font-size: 15px;">🪓 BỘ BỘ</div>
-        </div>
-    </div>
 
-    <div class="lobby-body">
-        <!-- Khung hiển thị tướng Bộ Bộ -->
-        <div class="hero-preview">
-            <canvas id="heroPreviewCanvas" width="140" height="140"></canvas>
-            <h3 style="color: #f1c40f; margin-top: 5px;">BỘ BỘ</h3>
-            <p style="font-size: 11px; text-align: center; color: #dfe6e9; margin-top: 4px;">
-                Kỹ năng: <b>Chạy Nhảy Bổ Rìu</b><br>Lao tới phía trước gây sát thương diện rộng.
-            </p>
-        </div>
+📱
+VUI LÒNG XOAY NGANG ĐIỆN THOẠI
+Trò chơi hỗ trợ tốt nhất ở chế độ màn hình ngang (Landscape).
+Ngôi Sao Bộ Lạc
 
-        <!-- Bảng cộng điểm kỹ năng ngoài sảnh -->
-        <div class="skill-tree-panel">
-            <div class="skill-tree-header">
-                <span style="font-weight: bold; font-size: 14px;">⚡ BẢNG THIÊN PHÚ (NGOÀI SẢNH)</span>
-                <span style="background: #e67e22; padding: 3px 8px; border-radius: 8px; font-size: 12px;">Điểm dư: <b id="talent-points">0</b></span>
-            </div>
-            <p style="font-size: 11px; color: #b2bec3; margin-bottom: 8px;">Lên cấp tài khoản (Lv.2+) nhận 1 điểm cộng vĩnh viễn giúp mạnh hơn khi vào trận!</p>
-            <div id="talent-list"></div>
-        </div>
-    </div>
+ĐĂNG NHẬP
+ĐĂNG KÝ MỚI
 
-    <div class="lobby-footer">
-        <button class="btn-battle" onclick="startMatch()">⚔️ VÀO TRẬN NGAY</button>
-    </div>
-</div>
 
-<!-- 3. MÀN HÌNH TRẬN ĐẤU -->
-<div id="game-screen">
-    <canvas id="gameCanvas"></canvas>
-    <div id="ui-layer">
-        <!-- Góc trên trái: Giết / Chết / Hỗ trợ & Cân nặng -->
-        <div id="kda-panel">
-            <div class="kda-row">
-                <span title="Giết">⚔️ <span id="ui-kills">0</span></span>
-                <span title="Chết">💀 <span id="ui-deaths">0</span></span>
-                <span title="Hỗ trợ">🛡️ <span id="ui-assists">0</span></span>
-            </div>
-            <div class="weight-text">Cân nặng: <span id="ui-weight">50</span> Kg</div>
-        </div>
 
-        <!-- Chính giữa trên: Thời gian đếm ngược -->
-        <div id="timer-box">⏱️ <span id="ui-timer">02:30</span></div>
 
-        <!-- Góc trên phải: Bảng xếp hạng -->
-        <div id="leaderboard">
-            <h4>BẢNG XẾP HẠNG</h4>
-            <div id="lb-list"></div>
-        </div>
 
-        <!-- Bảng chọn 3 kỹ năng Roguelite trong trận -->
-        <div id="skill-modal"></div>
+ĐĂNG NHẬP VÀO SẢNH
 
-        <!-- Hàng icon kỹ năng đã học ở giữa dưới -->
-        <div id="learned-skills-bar"></div>
+Bộ Bộ (@user)
 
-        <!-- Cụm nút bên phải: Kỹ năng + Đánh thường -->
-        <div id="controls-right">
-            <div class="action-btn" id="btn-skill">
-                <span>🦘 NHẢY</span>
-                <div id="skill-cd-overlay">3</div>
-            </div>
-            <div class="action-btn" id="btn-attack">🪓 NỆN</div>
-        </div>
+Tài khoản Lv.1 (0/100 EXP)
 
-        <!-- Màn hình tổng kết hết giờ -->
-        <div id="match-end-screen">
-            <div class="summary-card">
-                <h2 style="color: #f1c40f; margin-bottom: 10px;">HẾT GIỜ!</h2>
-                <p id="end-rank" style="font-size: 18px; font-weight: bold; margin-bottom: 8px;"></p>
-                <p id="end-kda" style="font-size: 14px; color: #dfe6e9; margin-bottom: 8px;"></p>
-                <p id="end-exp-gain" style="font-size: 15px; color: #2ecc71; font-weight: bold; margin-bottom: 18px;"></p>
-                <button class="btn-primary" onclick="returnToLobby()">VỀ SẢNH NHẬN EXP</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<script>
-// ================= DỮ LIỆU TÀI KHOẢN & LƯU TRỮ =================
-let account = {
-    name: "Bộ Bộ Tân Thủ",
-    level: 1,
-    exp: 0,
-    maxExp: 100,
-    talentPoints: 0,
-    talents: {
-        atk: 0,    // Tăng sát thương khởi đầu
-        hp: 0,     // Tăng máu khởi đầu
-        spd: 0,    // Tăng tốc độ chạy
-        magnet: 0  // Tăng tầm hút nấm
-    }
+
+
+Tướng đang chọn
+🪓 BỘ BỘ
+
+Đăng xuất
+
+BỘ BỘ
+
+Kỹ năng: Chạy Nhảy Bổ Rìu
+Lao tới phía trước gây sát thương diện rộng.
+
+⚡ BẢNG THIÊN PHÚ VĨNH VIỄN
+Điểm dư: 0
+
+
+
+⚔️ VÀO TRẬN SINH TỬ (03:00)
+
+⚔️ 0
+💀 0
+🛡️ 0
+
+Cân nặng: 50 Kg
+⏱️ 03:00
+Vòng bo: 100%
+
+BẢNG XẾP HẠNG
+
+🦘 NHẢY
+3
+
+🪓 NỆN
+KẾT THÚC TRẬN ĐẤU!
+
+
+
+VỀ SẢNH NHẬN EXP
+
+
+
+// ================= KHÓA XOAY NGANG KHI CHẠM MÀN HÌNH =================
+function lockLandscapeMode() {
+if (screen.orientation && screen.orientation.lock) {
+screen.orientation.lock('landscape').catch(() => {});
+}
+}
+document.addEventListener('click', lockLandscapeMode, { once: true });
+// ================= HỆ THỐNG TÀI KHOẢN & MẬT KHẨU =================
+const DB_KEY = 'nsbl_users_db_v2';
+const SESSION_KEY = 'nsbl_current_user_v2';
+let authMode = 'login';
+let currentUser = null;
+let account = null;
+function getUsersDB() {
+return JSON.parse(localStorage.getItem(DB_KEY) || '{}');
+}
+function saveUsersDB(db) {
+localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+function saveCurrentAccount() {
+if (!currentUser || !account) return;
+const db = getUsersDB();
+db[currentUser] = account;
+saveUsersDB(db);
+}
+function switchAuthMode(mode) {
+authMode = mode;
+document.getElementById('auth-msg').innerText = '';
+document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+document.getElementById('auth-displayname').style.display = mode === 'register' ? 'block' : 'none';
+document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'ĐĂNG NHẬP VÀO SẢNH' : 'TẠO TÀI KHOẢN & NHẬN BỘ BỘ';
+}
+function handleAuth() {
+const username = document.getElementById('auth-username').value.trim().toLowerCase();
+const password = document.getElementById('auth-password').value.trim();
+const displayName = document.getElementById('auth-displayname').value.trim();
+const msgEl = document.getElementById('auth-msg');
+if (username.length < 3 || password.length < 3) {
+msgEl.innerText = 'Tên đăng nhập và mật khẩu phải có ít nhất 3 ký tự!';
+return;
+}
+const db = getUsersDB();
+if (authMode === 'register') {
+if (db[username]) {
+msgEl.innerText = 'Tên đăng nhập này đã tồn tại, hãy chọn tên khác!';
+return;
+}
+db[username] = {
+username: username,
+password: password,
+name: displayName || username,
+level: 1,
+exp: 0,
+maxExp: 100,
+talentPoints: 0,
+talents: { atk: 0, hp: 0, spd: 0, magnet: 0 }
 };
-
-const TALENT_DEFS = [
-    { key: 'atk', name: '🪓 Rìu Chiến Sắc Bén', desc: '+8 Sát thương mỗi cấp', max: 10 },
-    { key: 'hp', name: '❤️ Thể Lực Thổ Dân', desc: '+30 Máu tối đa mỗi cấp', max: 10 },
-    { key: 'spd', name: '👟 Bước Chân Thần Tốc', desc: '+6% Tốc độ di chuyển mỗi cấp', max: 10 },
-    { key: 'magnet', name: '🧲 Hào Quang Hút Nấm', desc: '+25px Tầm hút nấm tự động', max: 10 }
-];
-
-// Tải dữ liệu nếu đã từng tạo tài khoản trên trình duyệt
-const savedData = localStorage.getItem('nsbl_account_v1');
-if (savedData) {
-    account = JSON.parse(savedData);
-    document.getElementById('register-screen').style.display = 'none';
-    openLobby();
+saveUsersDB(db);
+loginSuccess(username, db[username]);
+} else {
+if (!db[username] || db[username].password !== password) {
+msgEl.innerText = 'Sai tên đăng nhập hoặc mật khẩu!';
+return;
 }
-
-function saveAccount() {
-    localStorage.setItem('nsbl_account_v1', JSON.stringify(account));
+loginSuccess(username, db[username]);
 }
-
-function createAccount() {
-    const inputName = document.getElementById('input-username').value.trim();
-    account.name = inputName || "Bộ Bộ Tân Thủ";
-    account.level = 1;
-    account.exp = 0;
-    account.maxExp = 100;
-    account.talentPoints = 0;
-    saveAccount();
-    document.getElementById('register-screen').style.display = 'none';
-    openLobby();
 }
-
+function loginSuccess(username, userData) {
+currentUser = username;
+account = userData;
+localStorage.setItem(SESSION_KEY, username);
+document.getElementById('auth-screen').style.display = 'none';
+lockLandscapeMode();
+openLobby();
+}
+function logoutAccount() {
+localStorage.removeItem(SESSION_KEY);
+currentUser = null;
+account = null;
+document.getElementById('lobby-screen').style.display = 'none';
+document.getElementById('auth-screen').style.display = 'flex';
+}
+// Tự động đăng nhập lại nếu đã lưu phiên
+const savedSession = localStorage.getItem(SESSION_KEY);
+if (savedSession) {
+const db = getUsersDB();
+if (db[savedSession]) {
+loginSuccess(savedSession, db[savedSession]);
+}
+}
 // ================= GIAO DIỆN SẢNH CHÍNH & CỘNG SKILL =================
+const TALENT_DEFS = [
+{ key: 'atk', name: '🪓 Rìu Chiến Sắc Bén', desc: '+8 Sát thương mỗi cấp', max: 10 },
+{ key: 'hp', name: '❤️ Thể Lực Thổ Dân', desc: '+30 Máu tối đa mỗi cấp', max: 10 },
+{ key: 'spd', name: '👟 Bước Chân Thần Tốc', desc: '+6% Tốc độ di chuyển mỗi cấp', max: 10 },
+{ key: 'magnet', name: '🧲 Hào Quang Hút Nấm', desc: '+25px Tầm hút nấm tự động', max: 10 }
+];
 function openLobby() {
-    document.getElementById('game-screen').style.display = 'none';
-    document.getElementById('lobby-screen').style.display = 'flex';
-    updateLobbyUI();
-    drawHeroPreview();
+document.getElementById('game-screen').style.display = 'none';
+document.getElementById('lobby-screen').style.display = 'flex';
+updateLobbyUI();
+drawHeroPreview();
 }
-
 function updateLobbyUI() {
-    document.getElementById('lobby-name').innerText = account.name;
-    document.getElementById('lobby-level').innerText = account.level;
-    document.getElementById('lobby-exp').innerText = account.exp;
-    document.getElementById('lobby-max-exp').innerText = account.maxExp;
-    document.getElementById('lobby-exp-bar').style.width = Math.min(100, (account.exp / account.maxExp) * 100) + '%';
-    document.getElementById('talent-points').innerText = account.talentPoints;
-
-    const listEl = document.getElementById('talent-list');
-    listEl.innerHTML = '';
-    TALENT_DEFS.forEach(t => {
-        const curLv = account.talents[t.key];
-        const canUpgrade = account.talentPoints > 0 && curLv < t.max;
-        const item = document.createElement('div');
-        item.className = 'talent-item';
-        item.innerHTML = `
-            <div class="talent-info">
-                <h4>${t.name} <span style="color:#2ecc71">[Lv.${curLv}/${t.max}]</span></h4>
-                <p>${t.desc}</p>
-            </div>
-            <button class="btn-plus" ${canUpgrade ? '' : 'disabled'} onclick="upgradeTalent('${t.key}')">+</button>
-        `;
-        listEl.appendChild(item);
-    });
+document.getElementById('lobby-name').innerText = account.name;
+document.getElementById('lobby-user').innerText = account.username;
+document.getElementById('lobby-level').innerText = account.level;
+document.getElementById('lobby-exp').innerText = account.exp;
+document.getElementById('lobby-max-exp').innerText = account.maxExp;
+document.getElementById('lobby-exp-bar').style.width = Math.min(100, (account.exp / account.maxExp) * 100) + '%';
+document.getElementById('talent-points').innerText = account.talentPoints;
+const listEl = document.getElementById('talent-list');
+listEl.innerHTML = '';
+TALENT_DEFS.forEach(t => {
+const curLv = account.talents[t.key];
+const canUpgrade = account.talentPoints > 0 && curLv < t.max;
+const item = document.createElement('div');
+item.className = 'talent-item';
+item.innerHTML = <div class="talent-info"> <h4>${t.name} <span style="color:#2ecc71">[Lv.${curLv}/${t.max}]</span></h4> <p>${t.desc}</p> </div> <button class="btn-plus" ${canUpgrade ? '' : 'disabled'} onclick="upgradeTalent('${t.key}')">+</button>;
+listEl.appendChild(item);
+});
 }
-
 function upgradeTalent(key) {
-    if (account.talentPoints > 0 && account.talents[key] < 10) {
-        account.talentPoints--;
-        account.talents[key]++;
-        saveAccount();
-        updateLobbyUI();
-    }
+if (account.talentPoints > 0 && account.talents[key] < 10) {
+account.talentPoints--;
+account.talents[key]++;
+saveCurrentAccount();
+updateLobbyUI();
 }
-
+}
 function drawHeroPreview() {
-    const pCanvas = document.getElementById('heroPreviewCanvas');
-    const pCtx = pCanvas.getContext('2d');
-    pCtx.clearRect(0, 0, 140, 140);
-    drawBoBoCharacter(pCtx, 70, 75, 34, 0, 0);
+const pCanvas = document.getElementById('heroPreviewCanvas');
+const pCtx = pCanvas.getContext('2d');
+pCtx.clearRect(0, 0, 120, 120);
+drawBoBoCharacter(pCtx, 60, 65, 30, 0, 0);
 }
-
 // ================= HỆ THỐNG ĐỒ HỌA TƯỚNG BỘ BỘ =================
 function drawBoBoCharacter(c, x, y, r, angle, attackAnim) {
-    c.save();
-    c.translate(x, y);
-
-    // Bóng đổ dưới chân
-    c.fillStyle = 'rgba(0,0,0,0.25)';
-    c.beginPath();
-    c.ellipse(0, r * 0.85, r * 0.9, r * 0.4, 0, 0, Math.PI * 2);
-    c.fill();
-
-    // Thân áo thổ dân màu cam/nâu
-    c.beginPath();
-    c.arc(0, 0, r, 0, Math.PI * 2);
-    c.fillStyle = '#e67e22';
-    c.fill();
-    c.lineWidth = 3;
-    c.strokeStyle = '#2d3436';
-    c.stroke();
-
-    // Tóc xù thổ dân màu nâu đậm
-    c.fillStyle = '#6e2c00';
-    c.beginPath();
-    c.arc(0, -r * 0.25, r * 0.85, Math.PI, Math.PI * 2);
-    c.fill();
-
-    // Cặp sừng trắng đặc trưng của Bộ Bộ
-    c.fillStyle = '#fff';
-    c.strokeStyle = '#2d3436';
-    c.lineWidth = 2;
-    // Sừng trái
-    c.beginPath();
-    c.moveTo(-r * 0.6, -r * 0.4);
-    c.quadraticCurveTo(-r * 1.25, -r * 0.9, -r * 0.85, -r * 1.25);
-    c.quadraticCurveTo(-r * 0.55, -r * 0.85, -r * 0.35, -r * 0.6);
-    c.fill(); c.stroke();
-    // Sừng phải
-    c.beginPath();
-    c.moveTo(r * 0.6, -r * 0.4);
-    c.quadraticCurveTo(r * 1.25, -r * 0.9, r * 0.85, -r * 1.25);
-    c.quadraticCurveTo(r * 0.55, -r * 0.85, r * 0.35, -r * 0.6);
-    c.fill(); c.stroke();
-
-    // Đôi mắt nhìn theo hướng di chuyển
-    const eyeOffsetX = Math.cos(angle) * (r * 0.28);
-    const eyeOffsetY = Math.sin(angle) * (r * 0.28);
-    c.fillStyle = '#fff';
-    c.beginPath();
-    c.arc(eyeOffsetX - r * 0.25, eyeOffsetY, r * 0.22, 0, Math.PI * 2);
-    c.arc(eyeOffsetX + r * 0.25, eyeOffsetY, r * 0.22, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = '#000';
-    c.beginPath();
-    c.arc(eyeOffsetX - r * 0.22, eyeOffsetY, r * 0.1, 0, Math.PI * 2);
-    c.arc(eyeOffsetX + r * 0.28, eyeOffsetY, r * 0.1, 0, Math.PI * 2);
-    c.fill();
-
-    // Rìu chiến của Bộ Bộ
-    c.rotate(angle + (attackAnim > 0 ? (0.5 - attackAnim) * 2.4 : -0.4));
-    // Cán rìu
-    c.fillStyle = '#8e44ad';
-    c.fillRect(r * 0.6, -4, r * 1.1, 8);
-    // Lưỡi rìu đá
-    c.fillStyle = '#bdc3c7';
-    c.beginPath();
-    c.moveTo(r * 1.3, -16);
-    c.lineTo(r * 1.85, -20);
-    c.lineTo(r * 1.85, 20);
-    c.lineTo(r * 1.3, 16);
-    c.closePath();
-    c.fill();
-    c.stroke();
-
-    c.restore();
+c.save();
+c.translate(x, y);
+c.fillStyle = 'rgba(0,0,0,0.25)';
+c.beginPath();
+c.ellipse(0, r * 0.85, r * 0.9, r * 0.4, 0, 0, Math.PI * 2);
+c.fill();
+c.beginPath();
+c.arc(0, 0, r, 0, Math.PI * 2);
+c.fillStyle = '#e67e22';
+c.fill();
+c.lineWidth = 3;
+c.strokeStyle = '#2d3436';
+c.stroke();
+c.fillStyle = '#6e2c00';
+c.beginPath();
+c.arc(0, -r * 0.25, r * 0.85, Math.PI, Math.PI * 2);
+c.fill();
+c.fillStyle = '#fff';
+c.strokeStyle = '#2d3436';
+c.lineWidth = 2;
+c.beginPath();
+c.moveTo(-r * 0.6, -r * 0.4);
+c.quadraticCurveTo(-r * 1.25, -r * 0.9, -r * 0.85, -r * 1.25);
+c.quadraticCurveTo(-r * 0.55, -r * 0.85, -r * 0.35, -r * 0.6);
+c.fill(); c.stroke();
+c.beginPath();
+c.moveTo(r * 0.6, -r * 0.4);
+c.quadraticCurveTo(r * 1.25, -r * 0.9, r * 0.85, -r * 1.25);
+c.quadraticCurveTo(r * 0.55, -r * 0.85, r * 0.35, -r * 0.6);
+c.fill(); c.stroke();
+const eyeOffsetX = Math.cos(angle) * (r * 0.28);
+const eyeOffsetY = Math.sin(angle) * (r * 0.28);
+c.fillStyle = '#fff';
+c.beginPath();
+c.arc(eyeOffsetX - r * 0.25, eyeOffsetY, r * 0.22, 0, Math.PI * 2);
+c.arc(eyeOffsetX + r * 0.25, eyeOffsetY, r * 0.22, 0, Math.PI * 2);
+c.fill();
+c.fillStyle = '#000';
+c.beginPath();
+c.arc(eyeOffsetX - r * 0.22, eyeOffsetY, r * 0.1, 0, Math.PI * 2);
+c.arc(eyeOffsetX + r * 0.28, eyeOffsetY, r * 0.1, 0, Math.PI * 2);
+c.fill();
+c.rotate(angle + (attackAnim > 0 ? (0.5 - attackAnim) * 2.4 : -0.4));
+c.fillStyle = '#8e44ad';
+c.fillRect(r * 0.6, -4, r * 1.1, 8);
+c.fillStyle = '#bdc3c7';
+c.beginPath();
+c.moveTo(r * 1.3, -16);
+c.lineTo(r * 1.85, -20);
+c.lineTo(r * 1.85, 20);
+c.lineTo(r * 1.3, 16);
+c.closePath();
+c.fill();
+c.stroke();
+c.restore();
 }
-
-// ================= LOGIC TRẬN ĐẤU (GAMEPLAY) =================
+// ================= LOGIC TRẬN ĐẤU & VÒNG BO PUBG =================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const heatCanvas = document.getElementById('heatmapCanvas');
+const heatCtx = heatCanvas.getContext('2d');
 let width = canvas.width = window.innerWidth;
 let height = canvas.height = window.innerHeight;
-
 window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+width = canvas.width = window.innerWidth;
+height = canvas.height = window.innerHeight;
+joystick.baseX = 90;
+joystick.baseY = height - 85;
+if (!joystick.active) {
+joystick.stickX = joystick.baseX;
+joystick.stickY = joystick.baseY;
+}
 });
-
-const MAP_SIZE = 2000;
-const MUSHROOM_COUNT = 120;
-const BOT_COUNT = 9;
-const MATCH_DURATION = 150; // 2 phút 30 giây
-
+const MAP_SIZE = 2200;
+const MAP_CENTER = MAP_SIZE / 2;
+const INITIAL_ZONE_RADIUS = 1100;
+const MIN_ZONE_RADIUS = 180;
+const MUSHROOM_COUNT = 130;
+const BOT_COUNT = 11;
+const MATCH_DURATION = 180; // Đúng 3 phút (180 giây)
+let zoneRadius = INITIAL_ZONE_RADIUS;
 const INGAME_SKILLS = [
-    { id: 'spin', icon: '🌪️', name: 'Chém Xoáy', desc: 'Đánh 360 độ' },
-    { id: 'magnet', icon: '🧲', name: 'Nam Châm', desc: 'Hút nấm cực xa' },
-    { id: 'lifesteal', icon: '🩸', name: 'Hút Máu', desc: 'Đánh hồi máu' },
-    { id: 'speed', icon: '⚡', name: 'Tăng Tốc', desc: '+20% Tốc chạy' },
-    { id: 'giant', icon: '🪓', name: 'Rìu Khổng Lồ', desc: '+30% Tầm đánh' }
+{ id: 'spin', icon: '🌪️', name: 'Chém Xoáy', desc: 'Đánh 360 độ' },
+{ id: 'magnet', icon: '🧲', name: 'Nam Châm', desc: 'Hút nấm cực xa' },
+{ id: 'lifesteal', icon: '🩸', name: 'Hút Máu', desc: 'Đánh hồi máu' },
+{ id: 'speed', icon: '⚡', name: 'Tăng Tốc', desc: '+20% Tốc chạy' },
+{ id: 'giant', icon: '🪓', name: 'Rìu Khổng Lồ', desc: '+30% Tầm đánh' }
 ];
-
-// Joystick bên trái giống Ngôi Sao Bộ Lạc Mobile
-const joystick = { active: false, baseX: 95, baseY: 0, stickX: 95, stickY: 0, dx: 0, dy: 0, touchId: null };
-
+const joystick = { active: false, baseX: 90, baseY: 0, stickX: 90, stickY: 0, dx: 0, dy: 0, touchId: null };
 let matchRunning = false;
 let timeLeft = MATCH_DURATION;
 let timerInterval = null;
 let animFrameId = null;
-
 let mushrooms = [];
 let fighters = [];
 let player = null;
-
 class Fighter {
-    constructor(name, x, y, color, isPlayer = false) {
-        this.name = name;
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.isPlayer = isPlayer;
-
-        // Áp dụng chỉ số cộng thêm từ Bảng Thiên Phú ngoài sảnh nếu là người chơi
-        const bonusAtk = isPlayer ? account.talents.atk * 8 : 0;
-        const bonusHp = isPlayer ? account.talents.hp * 30 : 0;
-        const bonusSpd = isPlayer ? account.talents.spd * 0.25 : 0;
-        const bonusMag = isPlayer ? account.talents.magnet * 25 : 0;
-
-        this.baseRadius = 22;
-        this.radius = 22;
-        this.level = 1;
-        this.weight = 50; // Cân nặng (điểm)
-        this.nextLevelWeight = 100;
-
-        this.maxHp = 120 + bonusHp;
-        this.hp = this.maxHp;
-        this.speed = 4.2 + bonusSpd;
-        this.damage = 28 + bonusAtk;
-        this.attackRange = 68;
-        this.magnetRadius = 45 + bonusMag;
-
-        this.kills = 0;
-        this.deaths = 0;
-        this.assists = 0;
-        this.recentAttackers = new Map(); // Lưu ID người đánh trúng trong 8s gần nhất để tính Hỗ trợ
-
-        this.angle = 0;
-        this.vx = 0;
-        this.vy = 0;
-        this.attackAnim = 0;
-        this.jumpTime = 0;
-        this.skillCooldown = 0;
-        this.dead = false;
-
-        this.learnedIcons = [];
-        this.skills = { spin: false, magnet: false, lifesteal: false };
-
-        // AI Bot
-        this.aiTimer = 0;
-        this.aiDirX = 0;
-        this.aiDirY = 0;
-    }
-
-    update() {
-        if (this.dead) return;
-        if (this.attackAnim > 0) this.attackAnim -= 0.12;
-        if (this.skillCooldown > 0) this.skillCooldown = Math.max(0, this.skillCooldown - 1/60);
-
-        let moveX = 0, moveY = 0;
-        if (this.isPlayer) {
-            moveX = joystick.dx;
-            moveY = joystick.dy;
-        } else {
-            this.updateAI();
-            moveX = this.aiDirX;
-            moveY = this.aiDirY;
-        }
-
-        // Kỹ năng Nhảy bổ rìu của Bộ Bộ
-        if (this.jumpTime > 0) {
-            this.jumpTime--;
-            this.x += Math.cos(this.angle) * (this.speed * 2.9);
-            this.y += Math.sin(this.angle) * (this.speed * 2.9);
-            if (this.jumpTime === 0) this.attack(true); // Đáp đất tự động bổ rìu mạnh
-        } else {
-            if (moveX !== 0 || moveY !== 0) {
-                this.angle = Math.atan2(moveY, moveX);
-                this.x += moveX * this.speed;
-                this.y += moveY * this.speed;
-            }
-        }
-
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vx *= 0.85;
-        this.vy *= 0.85;
-
-        this.x = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.x));
-        this.y = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.y));
-    }
-
-    updateAI() {
-        this.aiTimer--;
-        let target = null;
-        let minDist = 360;
-        fighters.forEach(f => {
-            if (f !== this && !f.dead) {
-                const d = Math.hypot(f.x - this.x, f.y - this.y);
-                if (d < minDist) { minDist = d; target = f; }
-            }
-        });
-
-        if (target) {
-            const ang = Math.atan2(target.y - this.y, target.x - this.x);
-            this.aiDirX = Math.cos(ang);
-            this.aiDirY = Math.sin(ang);
-            if (minDist < this.attackRange + this.radius && Math.random() < 0.08) this.attack();
-            else if (minDist < 220 && this.skillCooldown <= 0 && Math.random() < 0.02) this.useSkill();
-        } else if (this.aiTimer <= 0) {
-            this.aiTimer = 45 + Math.random() * 50;
-            const randAng = Math.random() * Math.PI * 2;
-            this.aiDirX = Math.cos(randAng);
-            this.aiDirY = Math.sin(randAng);
-        }
-    }
-
-    attack(isSkillBonus = false) {
-        if (this.dead || (!isSkillBonus && this.attackAnim > 0.25)) return;
-        this.attackAnim = 1.0;
-
-        const range = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
-        const dmg = isSkillBonus ? this.damage * 1.35 : this.damage;
-
-        fighters.forEach(target => {
-            if (target === this || target.dead) return;
-            const dx = target.x - this.x;
-            const dy = target.y - this.y;
-            const dist = Math.hypot(dx, dy);
-
-            if (dist <= range + target.radius) {
-                const angleToTarget = Math.atan2(dy, dx);
-                let angleDiff = Math.abs(angleToTarget - this.angle);
-                if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
-
-                if (this.skills.spin || isSkillBonus || angleDiff < Math.PI / 2.1) {
-                    const knock = isSkillBonus ? 24 : 16;
-                    target.takeDamage(dmg, Math.cos(angleToTarget) * knock, Math.sin(angleToTarget) * knock, this);
-                    if (this.skills.lifesteal) {
-                        this.hp = Math.min(this.maxHp, this.hp + dmg * 0.25);
-                    }
-                }
-            }
-        });
-    }
-
-    useSkill() {
-        if (this.dead || this.skillCooldown > 0 || this.jumpTime > 0) return;
-        this.skillCooldown = 4.0; // Hồi chiêu 4 giây
-        this.jumpTime = 11;
-    }
-
-    takeDamage(dmg, kx, ky, attacker) {
-        if (this.dead) return;
-        this.hp -= dmg;
-        this.vx += kx;
-        this.vy += ky;
-
-        // Ghi nhận người tấn công để tính Hỗ trợ
-        if (attacker) {
-            this.recentAttackers.set(attacker, Date.now());
-        }
-
-        if (this.hp <= 0) {
-            this.dead = true;
-            this.deaths++;
-
-            // Tính Giết cho người kết liễu
-            if (attacker) {
-                attacker.kills++;
-                attacker.addWeight(60);
-            }
-
-            // Tính Hỗ trợ cho những người khác đã đánh trúng trong 8 giây qua
-            const now = Date.now();
-            this.recentAttackers.forEach((time, assister) => {
-                if (assister !== attacker && now - time <= 8000) {
-                    assister.assists++;
-                    assister.addWeight(25);
-                }
-            });
-            this.recentAttackers.clear();
-
-            // Rơi nấm ra đất
-            for (let i = 0; i < this.level * 4; i++) {
-                spawnMushroom(this.x + (Math.random() - 0.5) * 90, this.y + (Math.random() - 0.5) * 90, true);
-            }
-
-            // Hồi sinh sau 3 giây
-            setTimeout(() => {
-                if (!matchRunning) return;
-                this.x = 150 + Math.random() * (MAP_SIZE - 300);
-                this.y = 150 + Math.random() * (MAP_SIZE - 300);
-                this.hp = this.maxHp;
-                this.dead = false;
-            }, 3000);
-        }
-    }
-
-    addWeight(pts) {
-        this.weight += pts;
-        this.hp = Math.min(this.maxHp, this.hp + 4);
-        if (this.weight >= this.nextLevelWeight) {
-            this.level++;
-            this.nextLevelWeight = Math.floor(this.nextLevelWeight * 1.45);
-            this.radius = Math.min(52, this.baseRadius + this.level * 2.2);
-            this.maxHp += 25;
-            this.hp = this.maxHp;
-            this.damage += 5;
-
-            if (this.isPlayer) {
-                showIngameSkillChoices();
-            } else {
-                const rand = INGAME_SKILLS[Math.floor(Math.random() * INGAME_SKILLS.length)];
-                applyIngameSkill(this, rand);
-            }
-        }
-    }
-
-    draw() {
-        if (this.dead) return;
-
-        // Vẽ vùng vung rìu
-        if (this.attackAnim > 0) {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.attackAnim * 0.45})`;
-            ctx.beginPath();
-            const r = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
-            if (this.skills.spin) {
-                ctx.arc(0, 0, r, 0, Math.PI * 2);
-            } else {
-                ctx.moveTo(0, 0);
-                ctx.arc(0, 0, r, this.angle - Math.PI / 2.1, this.angle + Math.PI / 2.1);
-            }
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // Hiệu ứng nhảy lên cao
-        const jumpScale = this.jumpTime > 0 ? 1.25 : 1.0;
-        drawBoBoCharacter(ctx, this.x, this.y, this.radius * jumpScale, this.angle, this.attackAnim);
-
-        // Tên & Thanh máu
-        ctx.fillStyle = this.isPlayer ? '#f1c40f' : '#ffffff';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Lv.${this.level} ${this.name}`, this.x, this.y - this.radius - 22);
-
-        const barW = 48;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 16, barW, 6);
-        ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#e74c3c';
-        ctx.fillRect(this.x - barW / 2, this.y - this.radius - 16, barW * Math.max(0, this.hp / this.maxHp), 6);
-    }
+constructor(name, x, y, color, isPlayer = false) {
+this.name = name;
+this.x = x;
+this.y = y;
+this.color = color;
+this.isPlayer = isPlayer;
+const bonusAtk = isPlayer ? account.talents.atk * 8 : 0;
+const bonusHp = isPlayer ? account.talents.hp * 30 : 0;
+const bonusSpd = isPlayer ? account.talents.spd * 0.25 : 0;
+const bonusMag = isPlayer ? account.talents.magnet * 25 : 0;
+this.baseRadius = 22;
+this.radius = 22;
+this.level = 1;
+this.weight = 50;
+this.nextLevelWeight = 100;
+this.maxHp = 130 + bonusHp;
+this.hp = this.maxHp;
+this.speed = 4.3 + bonusSpd;
+this.damage = 28 + bonusAtk;
+this.attackRange = 68;
+this.magnetRadius = 45 + bonusMag;
+this.kills = 0;
+this.deaths = 0;
+this.assists = 0;
+this.recentAttackers = new Map();
+this.angle = 0;
+this.vx = 0;
+this.vy = 0;
+this.attackAnim = 0;
+this.jumpTime = 0;
+this.skillCooldown = 0;
+this.zoneTickTimer = 0;
+this.dead = false;
+this.learnedIcons = [];
+this.skills = { spin: false, magnet: false, lifesteal: false };
+this.aiTimer = 0;
+this.aiDirX = 0;
+this.aiDirY = 0;
 }
-
-function spawnMushroom(x = Math.random() * MAP_SIZE, y = Math.random() * MAP_SIZE, isMeat = false) {
-    mushrooms.push({
-        x: Math.max(30, Math.min(MAP_SIZE - 30, x)),
-        y: Math.max(30, Math.min(MAP_SIZE - 30, y)),
-        value: isMeat ? 25 : 12,
-        radius: isMeat ? 10 : 7,
-        isMeat: isMeat,
-        color: ['#ff6b6b', '#48dbfb', '#1dd1a1', '#feca57'][Math.floor(Math.random() * 4)]
-    });
+update() {
+if (this.dead) return;
+if (this.attackAnim > 0) this.attackAnim -= 0.12;
+if (this.skillCooldown > 0) this.skillCooldown = Math.max(0, this.skillCooldown - 1/60);
+// Kiểm tra sát thương ngoài vòng bo (giống PUBG)
+const distFromCenter = Math.hypot(this.x - MAP_CENTER, this.y - MAP_CENTER);
+if (distFromCenter > zoneRadius) {
+this.zoneTickTimer++;
+if (this.zoneTickTimer >= 30) { // Mỗi 0.5 giây mất máu khi ngoài bo
+this.zoneTickTimer = 0;
+const zoneDmg = Math.max(8, this.maxHp * 0.06);
+this.takeDamage(zoneDmg, 0, 0, null);
 }
-
+} else {
+this.zoneTickTimer = 0;
+}
+let moveX = 0, moveY = 0;
+if (this.isPlayer) {
+moveX = joystick.dx;
+moveY = joystick.dy;
+} else {
+this.updateAI(distFromCenter);
+moveX = this.aiDirX;
+moveY = this.aiDirY;
+}
+if (this.jumpTime > 0) {
+this.jumpTime--;
+this.x += Math.cos(this.angle) * (this.speed * 2.9);
+this.y += Math.sin(this.angle) * (this.speed * 2.9);
+if (this.jumpTime === 0) this.attack(true);
+} else {
+if (moveX !== 0 || moveY !== 0) {
+this.angle = Math.atan2(moveY, moveX);
+this.x += moveX * this.speed;
+this.y += moveY * this.speed;
+}
+}
+this.x += this.vx;
+this.y += this.vy;
+this.vx *= 0.85;
+this.vy *= 0.85;
+this.x = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.x));
+this.y = Math.max(this.radius, Math.min(MAP_SIZE - this.radius, this.y));
+}
+updateAI(distFromCenter) {
+// Bot tự động chạy vào tâm nếu sắp ra ngoài vòng bo
+if (distFromCenter > zoneRadius * 0.85) {
+const toCenter = Math.atan2(MAP_CENTER - this.y, MAP_CENTER - this.x);
+this.aiDirX = Math.cos(toCenter);
+this.aiDirY = Math.sin(toCenter);
+return;
+}
+this.aiTimer--;
+let target = null;
+let minDist = 360;
+fighters.forEach(f => {
+if (f !== this && !f.dead) {
+const d = Math.hypot(f.x - this.x, f.y - this.y);
+if (d < minDist) { minDist = d; target = f; }
+}
+});
+if (target) {
+const ang = Math.atan2(target.y - this.y, target.x - this.x);
+this.aiDirX = Math.cos(ang);
+this.aiDirY = Math.sin(ang);
+if (minDist < this.attackRange + this.radius && Math.random() < 0.08) this.attack();
+else if (minDist < 220 && this.skillCooldown <= 0 && Math.random() < 0.02) this.useSkill();
+} else if (this.aiTimer <= 0) {
+this.aiTimer = 45 + Math.random() * 50;
+const randAng = Math.random() * Math.PI * 2;
+this.aiDirX = Math.cos(randAng);
+this.aiDirY = Math.sin(randAng);
+}
+}
+attack(isSkillBonus = false) {
+if (this.dead || (!isSkillBonus && this.attackAnim > 0.25)) return;
+this.attackAnim = 1.0;
+const range = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
+const dmg = isSkillBonus ? this.damage * 1.35 : this.damage;
+fighters.forEach(target => {
+if (target === this || target.dead) return;
+const dx = target.x - this.x;
+const dy = target.y - this.y;
+const dist = Math.hypot(dx, dy);
+if (dist <= range + target.radius) {
+const angleToTarget = Math.atan2(dy, dx);
+let angleDiff = Math.abs(angleToTarget - this.angle);
+if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+if (this.skills.spin || isSkillBonus || angleDiff < Math.PI / 2.1) {
+const knock = isSkillBonus ? 24 : 16;
+target.takeDamage(dmg, Math.cos(angleToTarget) * knock, Math.sin(angleToTarget) * knock, this);
+if (this.skills.lifesteal) {
+this.hp = Math.min(this.maxHp, this.hp + dmg * 0.25);
+}
+}
+}
+});
+}
+useSkill() {
+if (this.dead || this.skillCooldown > 0 || this.jumpTime > 0) return;
+this.skillCooldown = 4.0;
+this.jumpTime = 11;
+}
+takeDamage(dmg, kx, ky, attacker) {
+if (this.dead) return;
+this.hp -= dmg;
+this.vx += kx;
+this.vy += ky;
+if (attacker) {
+this.recentAttackers.set(attacker, Date.now());
+}
+if (this.hp <= 0) {
+this.dead = true;
+this.deaths++;
+if (attacker) {
+attacker.kills++;
+attacker.addWeight(60);
+}
+const now = Date.now();
+this.recentAttackers.forEach((time, assister) => {
+if (assister !== attacker && now - time <= 8000) {
+assister.assists++;
+assister.addWeight(25);
+}
+});
+this.recentAttackers.clear();
+for (let i = 0; i < this.level * 4; i++) {
+spawnMushroom(this.x + (Math.random() - 0.5) * 90, this.y + (Math.random() - 0.5) * 90, true);
+}
+// Hồi sinh ngẫu nhiên bên trong vòng bo an toàn
+setTimeout(() => {
+if (!matchRunning) return;
+const spawnR = Math.random() * (zoneRadius * 0.8);
+const spawnAng = Math.random() * Math.PI * 2;
+this.x = MAP_CENTER + Math.cos(spawnAng) * spawnR;
+this.y = MAP_CENTER + Math.sin(spawnAng) * spawnR;
+this.hp = this.maxHp;
+this.dead = false;
+}, 3000);
+}
+}
+addWeight(pts) {
+this.weight += pts;
+this.hp = Math.min(this.maxHp, this.hp + 4);
+if (this.weight >= this.nextLevelWeight) {
+this.level++;
+this.nextLevelWeight = Math.floor(this.nextLevelWeight * 1.45);
+this.radius = Math.min(50, this.baseRadius + this.level * 2.1);
+this.maxHp += 25;
+this.hp = this.maxHp;
+this.damage += 5;
+if (this.isPlayer) {
+showIngameSkillChoices();
+} else {
+const rand = INGAME_SKILLS[Math.floor(Math.random() * INGAME_SKILLS.length)];
+applyIngameSkill(this, rand);
+}
+}
+}
+draw() {
+if (this.dead) return;
+if (this.attackAnim > 0) {
+ctx.save();
+ctx.translate(this.x, this.y);
+ctx.fillStyle = rgba(255, 255, 255, ${this.attackAnim * 0.45});
+ctx.beginPath();
+const r = (this.attackRange + this.radius) * (this.skills.spin ? 1.25 : 1);
+if (this.skills.spin) {
+ctx.arc(0, 0, r, 0, Math.PI * 2);
+} else {
+ctx.moveTo(0, 0);
+ctx.arc(0, 0, r, this.angle - Math.PI / 2.1, this.angle + Math.PI / 2.1);
+}
+ctx.fill();
+ctx.restore();
+}
+const jumpScale = this.jumpTime > 0 ? 1.25 : 1.0;
+drawBoBoCharacter(ctx, this.x, this.y, this.radius * jumpScale, this.angle, this.attackAnim);
+ctx.fillStyle = this.isPlayer ? '#f1c40f' : '#ffffff';
+ctx.font = 'bold 12px sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText(Lv.${this.level} ${this.name}, this.x, this.y - this.radius - 22);
+const barW = 48;
+ctx.fillStyle = 'rgba(0,0,0,0.6)';
+ctx.fillRect(this.x - barW / 2, this.y - this.radius - 16, barW, 6);
+ctx.fillStyle = this.isPlayer ? '#2ecc71' : '#e74c3c';
+ctx.fillRect(this.x - barW / 2, this.y - this.radius - 16, barW * Math.max(0, this.hp / this.maxHp), 6);
+}
+}
+function spawnMushroom(x, y, isMeat = false) {
+if (x === undefined || y === undefined) {
+const r = Math.random() * (zoneRadius * 0.95);
+const ang = Math.random() * Math.PI * 2;
+x = MAP_CENTER + Math.cos(ang) * r;
+y = MAP_CENTER + Math.sin(ang) * r;
+}
+mushrooms.push({
+x: Math.max(30, Math.min(MAP_SIZE - 30, x)),
+y: Math.max(30, Math.min(MAP_SIZE - 30, y)),
+value: isMeat ? 25 : 12,
+radius: isMeat ? 10 : 7,
+isMeat: isMeat,
+color: ['#ff6b6b', '#48dbfb', '#1dd1a1', '#feca57'][Math.floor(Math.random() * 4)]
+});
+}
 function showIngameSkillChoices() {
-    const modal = document.getElementById('skill-modal');
-    modal.innerHTML = '';
-    const choices = [...INGAME_SKILLS].sort(() => 0.5 - Math.random()).slice(0, 3);
-    choices.forEach(sk => {
-        const btn = document.createElement('button');
-        btn.className = 'skill-btn';
-        btn.innerHTML = `${sk.icon} ${sk.name}<br><small style="font-weight:normal">${sk.desc}</small>`;
-        btn.onclick = () => {
-            applyIngameSkill(player, sk);
-            modal.style.display = 'none';
-        };
-        modal.appendChild(btn);
-    });
-    modal.style.display = 'flex';
+const modal = document.getElementById('skill-modal');
+modal.innerHTML = '';
+const choices = [...INGAME_SKILLS].sort(() => 0.5 - Math.random()).slice(0, 3);
+choices.forEach(sk => {
+const btn = document.createElement('button');
+btn.className = 'skill-btn';
+btn.innerHTML = ${sk.icon} ${sk.name}<br><small style="font-weight:normal">${sk.desc}</small>;
+btn.onclick = () => {
+applyIngameSkill(player, sk);
+modal.style.display = 'none';
+};
+modal.appendChild(btn);
+});
+modal.style.display = 'flex';
 }
-
 function applyIngameSkill(fighter, sk) {
-    if (sk.id === 'spin') fighter.skills.spin = true;
-    if (sk.id === 'magnet') fighter.magnetRadius += 140;
-    if (sk.id === 'lifesteal') fighter.skills.lifesteal = true;
-    if (sk.id === 'speed') fighter.speed *= 1.2;
-    if (sk.id === 'giant') fighter.attackRange *= 1.3;
-
-    if (fighter.isPlayer) {
-        fighter.learnedIcons.push(sk.icon);
-        const bar = document.getElementById('learned-skills-bar');
-        bar.innerHTML = fighter.learnedIcons.map(ic => `<div class="learned-icon">${ic}</div>`).join('');
-    }
+if (sk.id === 'spin') fighter.skills.spin = true;
+if (sk.id === 'magnet') fighter.magnetRadius += 140;
+if (sk.id === 'lifesteal') fighter.skills.lifesteal = true;
+if (sk.id === 'speed') fighter.speed *= 1.2;
+if (sk.id === 'giant') fighter.attackRange *= 1.3;
+if (fighter.isPlayer) {
+fighter.learnedIcons.push(sk.icon);
+const bar = document.getElementById('learned-skills-bar');
+bar.innerHTML = fighter.learnedIcons.map(ic => <div class="learned-icon">${ic}</div>).join('');
 }
-
+}
 // ================= BẮT ĐẦU & KẾT THÚC TRẬN =================
 function startMatch() {
-    document.getElementById('lobby-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'block';
-    document.getElementById('match-end-screen').style.display = 'none';
-    document.getElementById('learned-skills-bar').innerHTML = '';
-    document.getElementById('skill-modal').style.display = 'none';
-
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-    joystick.baseX = 95;
-    joystick.baseY = height - 95;
-    joystick.stickX = joystick.baseX;
-    joystick.stickY = joystick.baseY;
-
-    mushrooms = [];
-    fighters = [];
-
-    player = new Fighter(account.name, MAP_SIZE / 2, MAP_SIZE / 2, '#f1c40f', true);
-    fighters.push(player);
-
-    const botNames = ['Lạc Lạc 2', 'Mu Mu 01', 'Nện Nện 3', 'Bóng Bóng', 'Ka Ka 99', 'Tù Trưởng', 'Bộ Bộ 02', 'Sói Hoang', 'Gấu Đen'];
-    for (let i = 0; i < BOT_COUNT; i++) {
-        fighters.push(new Fighter(botNames[i], Math.random() * MAP_SIZE, Math.random() * MAP_SIZE, '#e74c3c', false));
-    }
-
-    for (let i = 0; i < MUSHROOM_COUNT; i++) spawnMushroom();
-
-    timeLeft = MATCH_DURATION;
-    matchRunning = true;
-    updateTimerDisplay();
-
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        if (!matchRunning) return;
-        timeLeft--;
-        updateTimerDisplay();
-        if (timeLeft <= 0) {
-            endMatch();
-        }
-    }, 1000);
-
-    cancelAnimationFrame(animFrameId);
-    gameLoop();
+lockLandscapeMode();
+document.getElementById('lobby-screen').style.display = 'none';
+document.getElementById('game-screen').style.display = 'block';
+document.getElementById('match-end-screen').style.display = 'none';
+document.getElementById('learned-skills-bar').innerHTML = '';
+document.getElementById('skill-modal').style.display = 'none';
+width = canvas.width = window.innerWidth;
+height = canvas.height = window.innerHeight;
+joystick.baseX = 90;
+joystick.baseY = height - 85;
+joystick.stickX = joystick.baseX;
+joystick.stickY = joystick.baseY;
+zoneRadius = INITIAL_ZONE_RADIUS;
+mushrooms = [];
+fighters = [];
+player = new Fighter(account.name, MAP_CENTER, MAP_CENTER, '#f1c40f', true);
+fighters.push(player);
+const botNames = ['Lạc Lạc', 'Mu Mu', 'Nện Nện', 'Bóng Bóng', 'Ka Ka', 'Tù Trưởng', 'Bộ Bộ 02', 'Sói Hoang', 'Gấu Đen', 'Cáo Bạc', 'Hổ Vằn'];
+for (let i = 0; i < BOT_COUNT; i++) {
+const r = 200 + Math.random() * (INITIAL_ZONE_RADIUS - 300);
+const ang = Math.random() * Math.PI * 2;
+fighters.push(new Fighter(botNames[i], MAP_CENTER + Math.cos(ang) * r, MAP_CENTER + Math.sin(ang) * r, '#e74c3c', false));
 }
-
+for (let i = 0; i < MUSHROOM_COUNT; i++) spawnMushroom();
+timeLeft = MATCH_DURATION;
+matchRunning = true;
+updateTimerDisplay();
+clearInterval(timerInterval);
+timerInterval = setInterval(() => {
+if (!matchRunning) return;
+timeLeft--;
+// Thu nhỏ vòng bo dần về tâm theo thời gian 3 phút
+const progress = 1 - (timeLeft / MATCH_DURATION);
+zoneRadius = INITIAL_ZONE_RADIUS - progress * (INITIAL_ZONE_RADIUS - MIN_ZONE_RADIUS);
+updateTimerDisplay();
+if (timeLeft <= 0) {
+endMatch();
+}
+}, 1000);
+cancelAnimationFrame(animFrameId);
+gameLoop();
+}
 function updateTimerDisplay() {
-    const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const secs = String(timeLeft % 60).padStart(2, '0');
-    const timerEl = document.getElementById('ui-timer');
-    const boxEl = document.getElementById('timer-box');
-    timerEl.innerText = `${mins}:${secs}`;
-    if (timeLeft <= 30) boxEl.classList.add('timer-urgent');
-    else boxEl.classList.remove('timer-urgent');
+const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+const secs = String(timeLeft % 60).padStart(2, '0');
+const timerEl = document.getElementById('ui-timer');
+const boxEl = document.getElementById('timer-box');
+timerEl.innerText = ${mins}:${secs};
+const zonePct = Math.round((zoneRadius / INITIAL_ZONE_RADIUS) * 100);
+document.getElementById('zone-status').innerText = Vòng bo: ${zonePct}%;
+if (timeLeft <= 30) boxEl.classList.add('timer-urgent');
+else boxEl.classList.remove('timer-urgent');
 }
-
 function endMatch() {
-    matchRunning = false;
-    clearInterval(timerInterval);
-
-    const sorted = [...fighters].sort((a, b) => b.weight - a.weight);
-    const rank = sorted.indexOf(player) + 1;
-
-    // Tính EXP nhận được sau trận để lên cấp tài khoản ngoài sảnh
-    const expGained = 45 + player.kills * 15 + player.assists * 8 + (rank <= 3 ? 40 : 15);
-    account.exp += expGained;
-    let leveledUpMsg = "";
-    while (account.exp >= account.maxExp) {
-        account.exp -= account.maxExp;
-        account.level++;
-        account.talentPoints++;
-        account.maxExp = Math.floor(account.maxExp * 1.3);
-        leveledUpMsg = ` 🎉 LÊN CẤP TÀI KHOẢN LV.${account.level} (+1 Điểm Kỹ Năng)!`;
-    }
-    saveAccount();
-
-    document.getElementById('end-rank').innerText = `Hạng ${rank} / ${fighters.length} (${player.weight} Kg)`;
-    document.getElementById('end-kda').innerText = `Thành tích: ${player.kills} Giết / ${player.deaths} Chết / ${player.assists} Hỗ trợ`;
-    document.getElementById('end-exp-gain').innerText = `+${expGained} EXP${leveledUpMsg}`;
-    document.getElementById('match-end-screen').style.display = 'flex';
+matchRunning = false;
+clearInterval(timerInterval);
+const sorted = [...fighters].sort((a, b) => b.weight - a.weight);
+const rank = sorted.indexOf(player) + 1;
+const expGained = 50 + player.kills * 15 + player.assists * 8 + (rank <= 3 ? 45 : 15);
+account.exp += expGained;
+let leveledUpMsg = "";
+while (account.exp >= account.maxExp) {
+account.exp -= account.maxExp;
+account.level++;
+account.talentPoints++;
+account.maxExp = Math.floor(account.maxExp * 1.3);
+leveledUpMsg = 🎉 LÊN CẤP LV.${account.level} (+1 Điểm Kỹ Năng)!;
 }
-
+saveCurrentAccount();
+document.getElementById('end-rank').innerText = Hạng ${rank} / ${fighters.length} (${player.weight} Kg);
+document.getElementById('end-kda').innerText = Thành tích: ${player.kills} Giết / ${player.deaths} Chết / ${player.assists} Hỗ trợ;
+document.getElementById('end-exp-gain').innerText = +${expGained} EXP${leveledUpMsg};
+document.getElementById('match-end-screen').style.display = 'flex';
+}
 function returnToLobby() {
-    cancelAnimationFrame(animFrameId);
-    openLobby();
+cancelAnimationFrame(animFrameId);
+openLobby();
 }
-
+// ================= VẼ BẢN ĐỒ NHIỆT (HEATMAP RADAR) TRÊN CÙNG =================
+function drawHeatmapRadar() {
+const size = 90;
+const half = size / 2;
+const scale = half / INITIAL_ZONE_RADIUS;
+heatCtx.clearRect(0, 0, size, size);
+// Nền bản đồ tròn
+heatCtx.fillStyle = '#1e272e';
+heatCtx.beginPath();
+heatCtx.arc(half, half, half, 0, Math.PI * 2);
+heatCtx.fill();
+// Vùng an toàn hiện tại trên radar
+heatCtx.fillStyle = 'rgba(46, 204, 113, 0.25)';
+heatCtx.strokeStyle = '#2ecc71';
+heatCtx.lineWidth = 1.5;
+heatCtx.beginPath();
+heatCtx.arc(half, half, zoneRadius * scale, 0, Math.PI * 2);
+heatCtx.fill();
+heatCtx.stroke();
+// Vùng nhiệt địch (tỏa nhiệt đỏ/cam tại vị trí kẻ địch)
+fighters.forEach(f => {
+if (f.dead || f.isPlayer) return;
+const rx = half + (f.x - MAP_CENTER) * scale;
+const ry = half + (f.y - MAP_CENTER) * scale;
+const grad = heatCtx.createRadialGradient(rx, ry, 1, rx, ry, 12);
+grad.addColorStop(0, 'rgba(255, 71, 87, 0.95)');
+grad.addColorStop(0.5, 'rgba(255, 165, 2, 0.45)');
+grad.addColorStop(1, 'rgba(255, 165, 2, 0)');
+heatCtx.fillStyle = grad;
+heatCtx.beginPath();
+heatCtx.arc(rx, ry, 12, 0, Math.PI * 2);
+heatCtx.fill();
+});
+// Vị trí của người chơi (Chấm vàng nổi bật)
+if (player && !player.dead) {
+const px = half + (player.x - MAP_CENTER) * scale;
+const py = half + (player.y - MAP_CENTER) * scale;
+heatCtx.fillStyle = '#f1c40f';
+heatCtx.beginPath();
+heatCtx.arc(px, py, 3.5, 0, Math.PI * 2);
+heatCtx.fill();
+heatCtx.strokeStyle = '#fff';
+heatCtx.lineWidth = 1;
+heatCtx.stroke();
+}
+}
 // ================= ĐIỀU KHIỂN JOYSTICK TRÁI & NÚT PHẢI =================
 canvas.addEventListener('touchstart', e => {
-    for (let t of e.changedTouches) {
-        if (t.clientX < width * 0.45 && !joystick.active) {
-            joystick.active = true;
-            joystick.touchId = t.identifier;
-            joystick.baseX = t.clientX;
-            joystick.baseY = t.clientY;
-            joystick.stickX = t.clientX;
-            joystick.stickY = t.clientY;
-        }
-    }
+for (let t of e.changedTouches) {
+if (t.clientX < width * 0.45 && !joystick.active) {
+joystick.active = true;
+joystick.touchId = t.identifier;
+joystick.baseX = t.clientX;
+joystick.baseY = t.clientY;
+joystick.stickX = t.clientX;
+joystick.stickY = t.clientY;
+}
+}
 });
-
 canvas.addEventListener('touchmove', e => {
-    for (let t of e.changedTouches) {
-        if (joystick.active && t.identifier === joystick.touchId) {
-            const dx = t.clientX - joystick.baseX;
-            const dy = t.clientY - joystick.baseY;
-            const dist = Math.hypot(dx, dy);
-            const maxR = 48;
-            if (dist > 0) {
-                const clamped = Math.min(dist, maxR);
-                joystick.stickX = joystick.baseX + (dx / dist) * clamped;
-                joystick.stickY = joystick.baseY + (dy / dist) * clamped;
-                joystick.dx = (dx / dist) * (clamped / maxR);
-                joystick.dy = (dy / dist) * (clamped / maxR);
-            }
-        }
-    }
+for (let t of e.changedTouches) {
+if (joystick.active && t.identifier === joystick.touchId) {
+const dx = t.clientX - joystick.baseX;
+const dy = t.clientY - joystick.baseY;
+const dist = Math.hypot(dx, dy);
+const maxR = 45;
+if (dist > 0) {
+const clamped = Math.min(dist, maxR);
+joystick.stickX = joystick.baseX + (dx / dist) * clamped;
+joystick.stickY = joystick.baseY + (dy / dist) * clamped;
+joystick.dx = (dx / dist) * (clamped / maxR);
+joystick.dy = (dy / dist) * (clamped / maxR);
+}
+}
+}
 });
-
 canvas.addEventListener('touchend', e => {
-    for (let t of e.changedTouches) {
-        if (t.identifier === joystick.touchId) {
-            joystick.active = false;
-            joystick.dx = joystick.dy = 0;
-            joystick.baseX = 95;
-            joystick.baseY = height - 95;
-            joystick.stickX = joystick.baseX;
-            joystick.stickY = joystick.baseY;
-        }
-    }
+for (let t of e.changedTouches) {
+if (t.identifier === joystick.touchId) {
+joystick.active = false;
+joystick.dx = joystick.dy = 0;
+joystick.baseX = 90;
+joystick.baseY = height - 85;
+joystick.stickX = joystick.baseX;
+joystick.stickY = joystick.baseY;
+}
+}
 });
-
 document.getElementById('btn-attack').addEventListener('touchstart', e => { e.preventDefault(); if (player) player.attack(); });
 document.getElementById('btn-attack').addEventListener('mousedown', () => { if (player) player.attack(); });
 document.getElementById('btn-skill').addEventListener('touchstart', e => { e.preventDefault(); if (player) player.useSkill(); });
 document.getElementById('btn-skill').addEventListener('mousedown', () => { if (player) player.useSkill(); });
-
-// Hỗ trợ phím WASD + J + Space trên máy tính
 const keys = {};
 window.addEventListener('keydown', e => {
-    keys[e.code] = true;
-    if (e.code === 'KeyJ' && player) player.attack();
-    if (e.code === 'Space' && player) player.useSkill();
-    updateKeyMove();
+keys[e.code] = true;
+if (e.code === 'KeyJ' && player) player.attack();
+if (e.code === 'Space' && player) player.useSkill();
+updateKeyMove();
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; updateKeyMove(); });
 function updateKeyMove() {
-    let x = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
-    let y = (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) - (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0);
-    const len = Math.hypot(x, y);
-    joystick.dx = len > 0 ? x / len : 0;
-    joystick.dy = len > 0 ? y / len : 0;
+let x = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
+let y = (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) - (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0);
+const len = Math.hypot(x, y);
+joystick.dx = len > 0 ? x / len : 0;
+joystick.dy = len > 0 ? y / len : 0;
 }
-
 // ================= VÒNG LẶP VẼ TRẬN ĐẤU =================
 function gameLoop() {
-    if (!matchRunning) return;
-    ctx.clearRect(0, 0, width, height);
-
-    const camX = player.x - width / 2;
-    const camY = player.y - height / 2;
-
-    ctx.save();
-    ctx.translate(-camX, -camY);
-
-    // Nền bãi cỏ ô vuông giống bản gốc
-    const tileSize = 80;
-    const startCol = Math.max(0, Math.floor(camX / tileSize));
-    const endCol = Math.min(MAP_SIZE / tileSize, Math.ceil((camX + width) / tileSize));
-    const startRow = Math.max(0, Math.floor(camY / tileSize));
-    const endRow = Math.min(MAP_SIZE / tileSize, Math.ceil((camY + height) / tileSize));
-
-    for (let r = startRow; r < endRow; r++) {
-        for (let c = startCol; c < endCol; c++) {
-            ctx.fillStyle = (r + c) % 2 === 0 ? '#7bed9f' : '#70a1ff';
-            ctx.fillStyle = (r + c) % 2 === 0 ? '#6ab04c' : '#badc58';
-            ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
-        }
-    }
-
-    // Viền ranh giới đấu trường
-    ctx.strokeStyle = '#eb4d4b';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-    // Nấm & Đùi thịt
-    for (let i = mushrooms.length - 1; i >= 0; i--) {
-        const m = mushrooms[i];
-        let eaten = false;
-        for (let f of fighters) {
-            if (f.dead) continue;
-            const d = Math.hypot(f.x - m.x, f.y - m.y);
-            if (d < f.magnetRadius) {
-                m.x += (f.x - m.x) * 0.14;
-                m.y += (f.y - m.y) * 0.14;
-            }
-            if (d < f.radius + m.radius) {
-                f.addWeight(m.value);
-                eaten = true;
-                break;
-            }
-        }
-        if (eaten) {
-            mushrooms.splice(i, 1);
-            if (mushrooms.length < MUSHROOM_COUNT) spawnMushroom();
-            continue;
-        }
-
-        // Vẽ cây nấm có thân + mũ nấm
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(m.x - 3, m.y, 6, 7);
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, m.radius, Math.PI, Math.PI * 2);
-        ctx.fillStyle = m.isMeat ? '#e17055' : m.color;
-        ctx.fill();
-    }
-
-    fighters.forEach(f => { f.update(); f.draw(); });
-    ctx.restore();
-
-    // Vẽ Joystick cố định góc dưới trái (giống Ngôi Sao Bộ Lạc Mobile)
-    ctx.beginPath();
-    ctx.arc(joystick.baseX, joystick.baseY, 50, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(joystick.stickX, joystick.stickY, 22, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.fill();
-
-    // Cập nhật UI HUD
-    document.getElementById('ui-kills').innerText = player.kills;
-    document.getElementById('ui-deaths').innerText = player.deaths;
-    document.getElementById('ui-assists').innerText = player.assists;
-    document.getElementById('ui-weight').innerText = player.weight;
-
-    // Cooldown nút kỹ năng
-    const cdOverlay = document.getElementById('skill-cd-overlay');
-    if (player.skillCooldown > 0) {
-        cdOverlay.style.display = 'flex';
-        cdOverlay.innerText = Math.ceil(player.skillCooldown);
-    } else {
-        cdOverlay.style.display = 'none';
-    }
-
-    // Bảng xếp hạng
-    const top = [...fighters].sort((a, b) => b.weight - a.weight).slice(0, 6);
-    document.getElementById('lb-list').innerHTML = top
-        .map((f, idx) => `<div style="color:${f.isPlayer ? '#f1c40f' : '#fff'}">${idx + 1}. ${f.name} <b>${f.weight}</b></div>`).join('');
-
-    animFrameId = requestAnimationFrame(gameLoop);
+if (!matchRunning) return;
+ctx.clearRect(0, 0, width, height);
+const camX = player.x - width / 2;
+const camY = player.y - height / 2;
+ctx.save();
+ctx.translate(-camX, -camY);
+// Nền bãi cỏ ô vuông
+const tileSize = 80;
+const startCol = Math.max(0, Math.floor(camX / tileSize));
+const endCol = Math.min(MAP_SIZE / tileSize, Math.ceil((camX + width) / tileSize));
+const startRow = Math.max(0, Math.floor(camY / tileSize));
+const endRow = Math.min(MAP_SIZE / tileSize, Math.ceil((camY + height) / tileSize));
+for (let r = startRow; r < endRow; r++) {
+for (let c = startCol; c < endCol; c++) {
+ctx.fillStyle = (r + c) % 2 === 0 ? '#6ab04c' : '#badc58';
+ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
 }
-</script>
-</body>
-</html>
+}
+// Vùng bo độc ngoài vòng tròn (giống PUBG)
+ctx.save();
+ctx.beginPath();
+ctx.rect(0, 0, MAP_SIZE, MAP_SIZE);
+ctx.arc(MAP_CENTER, MAP_CENTER, zoneRadius, 0, Math.PI * 2, true);
+ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
+ctx.fill();
+ctx.restore();
+// Đường viền vòng bo an toàn
+ctx.strokeStyle = '#ff4757';
+ctx.lineWidth = 6;
+ctx.beginPath();
+ctx.arc(MAP_CENTER, MAP_CENTER, zoneRadius, 0, Math.PI * 2);
+ctx.stroke();
+// Đường chỉ dẫn từ người chơi vào tâm bo nếu đang đứng ngoài bo
+const distPlayerCenter = Math.hypot(player.x - MAP_CENTER, player.y - MAP_CENTER);
+if (distPlayerCenter > zoneRadius) {
+ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+ctx.setLineDash([10, 10]);
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.moveTo(player.x, player.y);
+ctx.lineTo(MAP_CENTER, MAP_CENTER);
+ctx.stroke();
+ctx.setLineDash([]);
+}
+// Nấm & Đùi thịt
+for (let i = mushrooms.length - 1; i >= 0; i--) {
+const m = mushrooms[i];
+let eaten = false;
+for (let f of fighters) {
+if (f.dead) continue;
+const d = Math.hypot(f.x - m.x, f.y - m.y);
+if (d < f.magnetRadius) {
+m.x += (f.x - m.x) * 0.14;
+m.y += (f.y - m.y) * 0.14;
+}
+if (d < f.radius + m.radius) {
+f.addWeight(m.value);
+eaten = true;
+break;
+}
+}
+if (eaten) {
+mushrooms.splice(i, 1);
+if (mushrooms.length < MUSHROOM_COUNT) spawnMushroom();
+continue;
+}
+ctx.fillStyle = '#fff';
+ctx.fillRect(m.x - 3, m.y, 6, 7);
+ctx.beginPath();
+ctx.arc(m.x, m.y, m.radius, Math.PI, Math.PI * 2);
+ctx.fillStyle = m.isMeat ? '#e17055' : m.color;
+ctx.fill();
+}
+fighters.forEach(f => { f.update(); f.draw(); });
+ctx.restore();
+// Vẽ Joystick trái
+ctx.beginPath();
+ctx.arc(joystick.baseX, joystick.baseY, 48, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+ctx.fill();
+ctx.lineWidth = 2;
+ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+ctx.stroke();
+ctx.beginPath();
+ctx.arc(joystick.stickX, joystick.stickY, 20, 0, Math.PI * 2);
+ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+ctx.fill();
+// Cập nhật Bản đồ nhiệt (Radar)
+drawHeatmapRadar();
+// Cập nhật UI HUD
+document.getElementById('ui-kills').innerText = player.kills;
+document.getElementById('ui-deaths').innerText = player.deaths;
+document.getElementById('ui-assists').innerText = player.assists;
+document.getElementById('ui-weight').innerText = player.weight;
+const cdOverlay = document.getElementById('skill-cd-overlay');
+if (player.skillCooldown > 0) {
+cdOverlay.style.display = 'flex';
+cdOverlay.innerText = Math.ceil(player.skillCooldown);
+} else {
+cdOverlay.style.display = 'none';
+}
+const top = [...fighters].sort((a, b) => b.weight - a.weight).slice(0, 6);
+document.getElementById('lb-list').innerHTML = top
+.map((f, idx) => <div style="color:${f.isPlayer ? '#f1c40f' : '#fff'}">${idx + 1}. ${f.name} <b>${f.weight}</b></div>).join('');
+animFrameId = requestAnimationFrame(gameLoop);
+}
